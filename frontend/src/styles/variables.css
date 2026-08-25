@@ -1,0 +1,107 @@
+/**
+ * Design System Variables
+ * Central location for all design tokens
+ * Follows CSS Custom Properties (CSS Variables) standard
+ */
+
+:root {
+  --color-text: #d1d5db;
+  --color-text-heading: #f8fafc;
+  --color-muted: #9ca3af;
+  --color-background: #090b14;
+  --color-surface: #111827;
+  --color-surface-alt: #161a2b;
+  --color-border: rgba(148, 163, 184, 0.18);
+  --color-border-strong: rgba(148, 163, 184, 0.28);
+  --color-code-bg: #0f172a;
+  --color-accent: #8b5cf6;
+  --color-accent-strong: #7c3aed;
+  --color-accent-bg: rgba(139, 92, 246, 0.16);
+  --color-accent-border: rgba(139, 92, 246, 0.32);
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.14);
+  --color-error: #f87171;
+  --color-error-dark: #ef4444;
+  --color-error-bg: rgba(248, 113, 113, 0.16);
+  --color-surface-border: rgba(255, 255, 255, 0.08);
+
+  --shadow-sm: rgba(0, 0, 0, 0.2) 0 1px 2px;
+  --shadow-md: rgba(0, 0, 0, 0.28) 0 8px 30px -10px;
+  --shadow-lg: rgba(15, 23, 42, 0.32) 0 16px 48px -20px, rgba(15, 23, 42, 0.2) 0 6px 16px -8px;
+
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-heading: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --font-size-base: 16px;
+  --font-size-lg: 24px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 36px;
+  --font-size-sm: 14px;
+  --font-size-xs: 12px;
+  --font-size-code: 15px;
+
+  --line-height-tight: 1.2;
+  --line-height-base: 1.6;
+  --line-height-relaxed: 1.75;
+
+  --letter-spacing-normal: 0.01em;
+  --letter-spacing-tight: -0.02em;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 40px;
+  --spacing-3xl: 48px;
+  --spacing-4xl: 64px;
+  --spacing-5xl: 64px;
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --z-dropdown: 1000;
+  --z-sticky: 600;
+  --z-fixed: 200;
+  --z-base: 1;
+
+  --transition-fast: all 0.15s ease;
+  --transition-base: all 0.2s ease;
+  --transition-slow: all 0.3s ease;
+
+  --container-width: 1180px;
+  --container-max-width: 100%;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-text: #3f3f46;
+    --color-text-heading: #0f172a;
+    --color-muted: #6b7280;
+    --color-background: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f1f5f9;
+    --color-border: #e2e8f0;
+    --color-border-strong: #cbd5e1;
+    --color-code-bg: #eef2ff;
+    --color-accent: #7c3aed;
+    --color-accent-strong: #5b21b6;
+    --color-accent-bg: rgba(124, 58, 237, 0.12);
+    --color-accent-border: rgba(124, 58, 237, 0.22);
+    --color-success: #16a34a;
+    --color-success-bg: rgba(16, 185, 129, 0.12);
+    --color-error: #dc2626;
+    --color-error-dark: #b91c1c;
+    --color-error-bg: rgba(239, 68, 68, 0.12);
+    --color-surface-border: rgba(15, 23, 42, 0.08);
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --font-size-base: 15px;
+  }
+}

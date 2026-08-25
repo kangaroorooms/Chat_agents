@@ -1,0 +1,208 @@
+/**
+ * Responsive Design
+ * Mobile-first approach with breakpoints
+ */
+
+/* ============================================
+   Tablet (768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .chat-header {
+    padding: var(--spacing-md) var(--spacing-lg);
+  }
+
+  .app-title {
+    font-size: 20px;
+  }
+
+  .chat-sidebar {
+    width: 240px;
+  }
+
+  .user-email {
+    display: none;
+  }
+
+  .card {
+    padding: var(--spacing-4xl) var(--spacing-2xl);
+  }
+
+  .auth-header h1 {
+    font-size: 28px;
+  }
+
+  .auth-header p {
+    font-size: var(--font-size-xs);
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  .app-header { padding: 0 18px; }
+  .app-body { padding: 18px; gap: 18px; }
+  .brand-subtitle { display: none; }
+  .summary-grid, .profile-grid { grid-template-columns: 1fr; }
+  .profile-card { margin-top: 0; }
+}
+
+/* ============================================
+   Mobile (480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  :root {
+    --font-size-base: 14px;
+  }
+
+  .chat-content {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .chat-main {
+    flex: 1;
+  }
+
+  .header-right {
+    gap: var(--spacing-md);
+  }
+
+  .user-info {
+    display: none;
+  }
+
+  .card {
+    padding: var(--spacing-3xl) var(--spacing-xl);
+    border-radius: var(--radius-lg);
+  }
+
+  .auth-header h1 {
+    font-size: 24px;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .auth-form {
+    gap: var(--spacing-lg);
+  }
+
+  .user-item {
+    padding: var(--spacing-md);
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .user-item-email {
+    display: none;
+  }
+
+  .form-group input,
+  .form-group textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  .password-toggle {
+    right: var(--spacing-md);
+  }
+  .app-header { height: 68px; }
+  .brand-mark { width: 40px; height: 40px; }
+  .brand-name { font-size: 17px; }
+  .header-right .user-details { display: none; }
+  .app-body { padding: 14px; }
+  .panel { padding: 16px; }
+  .page-header { gap: 16px; }
+  .page-header .panel-actions, .page-header .btn { width: 100%; }
+  .page-header .panel-actions .btn { flex: 1; }
+}
+
+/* ============================================
+   Extra Small Devices (below 360px)
+   ============================================ */
+
+@media (max-width: 360px) {
+  .card {
+    padding: var(--spacing-2xl) var(--spacing-lg);
+  }
+
+  .auth-header h1 {
+    font-size: 20px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* ============================================
+   Large Desktop (1200px and above)
+   ============================================ */
+
+@media (min-width: 1200px) {
+  .chat-sidebar {
+    width: 320px;
+  }
+
+  .card {
+    max-width: 500px;
+  }
+}
+
+/* ============================================
+   Landscape Orientation
+   ============================================ */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .chat-sidebar {
+    max-height: 90vh;
+  }
+
+  .messages-area {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* ============================================
+   High DPI Displays
+   ============================================ */
+
+@media (min-resolution: 192dpi) {
+  body {
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* ============================================
+   Reduced Motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   High Contrast Mode
+   ============================================ */
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-border: #333;
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.5);
+  }
+}

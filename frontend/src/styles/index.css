@@ -1,0 +1,196 @@
+/**
+ * Global Styles - Main Entry Point
+ * This file imports all style modules in the correct order
+ * 
+ * Import Order (Critical for CSS specificity):
+ * 1. Variables - CSS custom properties
+ * 2. Base - Reset and foundational styles
+ * 3. Animations - Keyframe definitions
+ * 4. Components - Component-specific styles
+ * 5. Responsive - Media queries
+ */
+
+@import './variables.css';
+@import './base.css';
+@import './animations.css';
+@import './components.css';
+@import './responsive.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Utility Classes
+ * Simple, single-purpose utility classes
+ */
+
+/* Display Utilities */
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Spacing Utilities */
+.m-0 {
+  margin: 0;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.mt-auto {
+  margin-top: auto;
+}
+
+.mb-auto {
+  margin-bottom: auto;
+}
+
+/* Flexbox Utilities */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+/* Text Utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+.font-semibold {
+  font-weight: 500;
+}
+
+.text-muted {
+  color: var(--color-text);
+}
+
+.text-heading {
+  color: var(--color-text-heading);
+}
+
+/* Border Utilities */
+.border-0 {
+  border: 0;
+}
+
+.border-t {
+  border-top: 1px solid var(--color-border);
+}
+
+.border-b {
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Background Utilities */
+.bg-accent {
+  background: var(--color-accent);
+}
+
+.bg-error {
+  background: var(--color-error);
+}
+
+/* Opacity Utilities */
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.opacity-75 {
+  opacity: 0.75;
+}
+
+/* Z-Index Utilities */
+.z-fixed {
+  z-index: var(--z-fixed);
+}
+
+.z-sticky {
+  z-index: var(--z-sticky);
+}
+
+/* Cursor Utilities */
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
+}
+
+/* Transition Utilities */
+.transition-fast {
+  transition: var(--transition-fast);
+}
+
+.transition-base {
+  transition: var(--transition-base);
+}
+
+.transition-slow {
+  transition: var(--transition-slow);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .hidden-print {
+    display: none !important;
+  }
+}
