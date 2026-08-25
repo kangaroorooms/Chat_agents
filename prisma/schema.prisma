@@ -1,0 +1,566 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      UserRole @default(CUSTOMER)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  isActive  Boolean  @default(true)
+
+  messages              Message[]
+  participants          ConversationParticipant[]
+  refreshTokens         RefreshToken[]
+  ownedConversations    Conversation[]            @relation("ConversationOwner")
+  assignedConversations Conversation[]            @relation("ConversationAssignedBy")
+  receipts              MessageReceipt[]
+
+  createdAt    DateTime      @default(now())
+  messageEdits MessageEdit[]
+
+  @@index([companyId])
+}
+
+model Conversation {
+  id         String                 @id @default(uuid())
+  title      String?
+  state      ConversationState      @default(OPEN)
+  queueState ConversationQueueState @default(NEW)
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  ownerId      String?
+  owner        User?     @relation("ConversationOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  assignedAt   DateTime?
+  assignedById String?
+  assignedBy   User?     @relation("ConversationAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  isDeleted     Boolean   @default(false)
+  deletedAt     DateTime?
+  lastMessageAt DateTime?
+  unreadCount   Int       @default(0)
+  metadata      Json?
+  archivedAt    DateTime?
+  dueAt         DateTime?  // SLA due date
+  breachedAt    DateTime?  // SLA breach timestamp
+
+  messages     Message[]
+  participants ConversationParticipant[]
+
+  createdAt DateTime @default(now())
+
+  @@index([lastMessageAt])
+  @@index([state])
+  @@index([queueState])
+  @@index([companyId])
+}
+
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ConversationState {
+  OPEN
+  PENDING
+  CLOSED
+  ARCHIVED
+}
+
+enum ConversationQueueState {
+  NEW
+  ASSIGNED
+  TRANSFERRED
+  ESCALATED
+  ON_HOLD
+}
+
+enum UserRole {
+  CUSTOMER
+  AGENT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+  AI
+
+  AUDIO
+  VIDEO
+  LOCATION
+  CAROUSEL
+}
+
+model Message {
+  id       String      @id @default(uuid())
+  content  String
+  type     MessageType @default(TEXT)
+  metadata Json?
+
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  senderId String
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  replyToId String?
+  replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: Cascade)
+  replies   Message[] @relation("MessageReplies")
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  editedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  edits    MessageEdit[]
+  receipts MessageReceipt[]
+
+  @@index([senderId])
+  @@index([conversationId])
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+model MessageReceipt {
+  id String @id @default(uuid())
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  deliveredAt DateTime?
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model MessageEdit {
+  id String @id @default(uuid())
+
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  editorId String
+  editor   User   @relation(fields: [editorId], references: [id], onDelete: Cascade)
+
+  content  String
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
+  @@index([editorId])
+}
+
+model ConversationParticipant {
+  id String @id @default(uuid())
+
+  userId         String
+  conversationId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, conversationId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model RefreshToken {
+  id                String    @id @default(uuid())
+  tokenHash         String    @unique
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceId          String?
+  deviceName        String?
+  ipAddress         String?
+  userAgent         String?
+  expiresAt         DateTime
+  lastUsedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  revokedAt         DateTime?
+  replacedByTokenId String?
+  isRevoked         Boolean   @default(false)
+
+  @@index([userId])
+}
+
+model KnowledgeDocument {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  title      String
+  content    String                  @db.Text
+  metadata   Json?
+  tags       String[]
+  sourceType DocumentSourceType      @default(DOCUMENT)
+  status     KnowledgeDocumentStatus @default(ACTIVE)
+  createdBy  String?
+  updatedBy  String?
+
+  chunks KnowledgeChunk[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+model AISettings {
+  id                  String  @id @default(uuid())
+  companyId           String  @unique
+  company             Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider            String
+  apiKey              String?
+  model               String?
+  // per-company toggles and thresholds
+  autoReplyEnabled    Boolean @default(false)
+  autoResolveEnabled  Boolean @default(false)
+  confidenceThreshold Float   @default(0.7)
+  temperature         Float   @default(0.7)
+  maxTokens           Int     @default(1024)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+model AIAnalytics {
+  id        String  @id @default(uuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  conversationId String?
+  messageId      String?
+  eventType      String // e.g., 'AI_HANDLED' | 'HUMAN_HANDLED' | 'ESCALATION' | 'AUTO_RESOLVE'
+  confidence     Float?
+  metadata       Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([conversationId])
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(uuid())
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  sequence       Int // Position in document
+  content        String  @db.Text
+  embedding      String? // Serialized vector (JSON array of floats)
+  embeddingModel String? // e.g., "text-embedding-3-small"
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([documentId, sequence])
+  @@index([documentId])
+}
+
+enum TrainingStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model KnowledgeTraining {
+  id         String         @id @default(uuid())
+  documentId String
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  status     TrainingStatus @default(PENDING)
+  error      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([documentId])
+}
+
+enum DocumentSourceType {
+  DOCUMENT
+  FAQ
+  ARTICLE
+  MANUAL
+}
+
+enum KnowledgeDocumentStatus {
+  ACTIVE
+  ARCHIVED
+  DRAFT
+}
+
+// ============ PHASE 1: WIDGET ============
+model WidgetVisitor {
+  id        String   @id @default(uuid())
+  companyId String
+  sessionId String   @unique
+  name      String?
+  email     String?
+  createdAt DateTime @default(now())
+
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+// ============ PHASE 2: BILLING & SUBSCRIPTIONS ============
+enum SubscriptionPlanType {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  SUSPENDED
+}
+
+model SubscriptionPlan {
+  id                String   @id @default(uuid())
+  name              SubscriptionPlanType
+  monthlyPrice      Int // in cents
+  maxAgents         Int
+  maxConversations  Int
+  maxDocuments      Int
+  aiEnabled         Boolean  @default(false)
+
+  subscriptions CompanySubscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+}
+
+model CompanySubscription {
+  id                 String   @id @default(uuid())
+  companyId          String   @unique
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  planId             String
+  plan               SubscriptionPlan @relation(fields: [planId], references: [id])
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([status])
+}
+
+// ============ PHASE 3: AUDIT LOGS ============
+enum AuditAction {
+  USER_CREATED
+  USER_UPDATED
+  USER_DELETED
+  COMPANY_UPDATED
+  KB_UPLOADED
+  AI_SETTINGS_CHANGED
+  CONVERSATION_ASSIGNED
+  CONVERSATION_RESOLVED
+  SUBSCRIPTION_CHANGED
+  API_KEY_CREATED
+  API_KEY_DELETED
+}
+
+model AuditLog {
+  id           String      @id @default(uuid())
+  companyId    String
+  userId       String?
+  action       AuditAction
+  resourceType String
+  resourceId   String
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+
+  @@index([companyId])
+  @@index([userId])
+  @@index([resourceType])
+  @@index([createdAt])
+}
+
+// ============ PHASE 4: SLA MANAGEMENT ============
+model SLAPolicy {
+  id                  String   @id @default(uuid())
+  companyId           String
+  company             Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  firstResponseMinutes Int      // minutes for first response
+  resolutionMinutes   Int      // minutes for resolution
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([companyId])
+}
+
+// ============ PHASE 5: EMAIL INTEGRATION ============
+enum EmailChannelStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+}
+
+model EmailChannel {
+  id           String             @id @default(uuid())
+  companyId    String
+  company      Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  email        String
+  provider     String // sendgrid, mailgun
+  apiKey       String
+  status       EmailChannelStatus @default(ACTIVE)
+  lastErrorAt  DateTime?
+  lastErrorMsg String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@unique([companyId])
+  @@index([companyId])
+}
+
+// ============ PHASE 6: WEBHOOKS ============
+enum WebhookEventType {
+  CONVERSATION_CREATED
+  CONVERSATION_ASSIGNED
+  CONVERSATION_RESOLVED
+  MESSAGE_CREATED
+  AI_REPLY_GENERATED
+}
+
+enum WebhookStatus {
+  ACTIVE
+  INACTIVE
+  FAILED
+}
+
+model Webhook {
+  id        String             @id @default(uuid())
+  companyId String
+  company   Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  url       String
+  secret    String
+  events    WebhookEventType[]
+  status    WebhookStatus      @default(ACTIVE)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  deliveries WebhookDelivery[]
+
+  @@index([companyId])
+}
+
+model WebhookDelivery {
+  id        String   @id @default(uuid())
+  webhookId String
+  webhook   Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event     WebhookEventType
+  payload   Json
+  statusCode Int?
+  responseBody String?
+  attempt   Int      @default(1)
+  nextRetryAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([webhookId])
+  @@index([createdAt])
+}
+
+// ============ PHASE 8: PRODUCTION READINESS (Request Logging) ============
+model RequestLog {
+  id            String   @id @default(uuid())
+  correlationId String
+  method        String
+  path          String
+  statusCode    Int
+  responseTime  Int      // milliseconds
+  userId        String?
+  companyId     String?
+  createdAt     DateTime @default(now())
+
+  @@index([correlationId])
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+// ============ PHASE 9: SECURITY (API KEYS) ============
+model CompanyApiKey {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  keyHash   String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+  revokedAt DateTime?
+
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+// ============ ADD NEW RELATIONSHIPS TO COMPANY ============
+model Company {
+  id      String        @id @default(uuid())
+  name    String
+  slug    String        @unique
+  logoUrl String?
+  status  CompanyStatus @default(ACTIVE)
+
+  users              User[]
+  conversations      Conversation[]
+  knowledgeDocuments KnowledgeDocument[]
+  aiSettings         AISettings?
+  subscription       CompanySubscription?
+  slaPolicies        SLAPolicy[]
+  emailChannels      EmailChannel[]
+  webhooks           Webhook[]
+  apiKeys            CompanyApiKey[]
+  auditLogs          AuditLog[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  messages    Message[]
+  aiAnalytics AIAnalytics[]
+
+  @@index([name])
+}
