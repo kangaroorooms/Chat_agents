@@ -2,6 +2,7 @@ import { getProviderForCompany } from '../../ai/provider/factory'
 import { getRetrieverService } from '../../knowledge/retriever/retriever.service'
 import { prisma } from '../../../config/prisma'
 import { analyticsService } from '../../ai/analytics/analytics.service'
+import { aiLatency } from '../../../infrastructure/metrics'
 
 export interface IntentDetectionResult {
   intent: 'support_question' | 'billing' | 'technical' | 'feedback' | 'unknown'
@@ -138,6 +139,7 @@ Respond with ONLY a JSON object: { "intent": "...", "confidence": 0.0-1.0, "cate
       const shouldEscalate = confidence < confidenceThreshold || intent.confidence < 0.4
 
       const processingTime = Date.now() - startTime
+      aiLatency.observe({ outcome: shouldEscalate ? 'escalated' : 'success' }, processingTime / 1000)
 
       // Record analytics
       await analyticsService.record({
@@ -169,6 +171,7 @@ Respond with ONLY a JSON object: { "intent": "...", "confidence": 0.0-1.0, "cate
     } catch (error) {
       console.error('AI response pipeline error:', error)
       const processingTime = Date.now() - startTime
+      aiLatency.observe({ outcome: 'error' }, processingTime / 1000)
 
       await analyticsService.record({
         companyId,

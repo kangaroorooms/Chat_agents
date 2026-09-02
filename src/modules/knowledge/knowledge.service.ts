@@ -28,15 +28,15 @@ export class KnowledgeServiceImpl {
   /**
    * Delete a document from the knowledge base
    */
-  async deleteDocument(documentId: string) {
-    return this.retriever.deleteDocument(documentId)
+  async deleteDocument(documentId: string, companyId?: string) {
+    return this.retriever.deleteDocument(documentId, companyId)
   }
 
   /**
    * Reindex a document
    */
-  async reindexDocument(documentId: string) {
-    return this.indexing.reindexDocument(documentId)
+  async reindexDocument(documentId: string, companyId?: string) {
+    return this.indexing.reindexDocument(documentId, companyId)
   }
 
   /**

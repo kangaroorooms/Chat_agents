@@ -1,5 +1,5 @@
-import { prisma } from '../../../config/prisma'
-import { v4 as uuid } from 'uuid'
+import { prisma } from '../../config/prisma'
+import crypto from 'crypto'
 
 interface WidgetConversationRequest {
   visitorId?: string
@@ -13,10 +13,10 @@ export class WidgetService {
    * Create or retrieve visitor session
    */
   async getOrCreateVisitor(companyId: string, sessionId?: string): Promise<any> {
-    const id = sessionId || uuid()
+    const id = sessionId || crypto.randomUUID()
     
-    let visitor = await (prisma as any).widgetVisitor.findUnique({
-      where: { sessionId: id },
+    let visitor = await (prisma as any).widgetVisitor.findFirst({
+      where: { sessionId: id, companyId },
     })
 
     if (!visitor) {
@@ -66,7 +66,9 @@ export class WidgetService {
   /**
    * Send message in widget conversation
    */
-  async sendMessage(conversationId: string, content: string, senderType: 'visitor' | 'system'): Promise<any> {
+  async sendMessage(conversationId: string, content: string, senderType: 'visitor' | 'system', companyId: string): Promise<any> {
+    const conversation = await (prisma as any).conversation.findFirst({ where: { id: conversationId, companyId } })
+    if (!conversation) throw new Error('Conversation not found')
     // Create a system message or visitor message
     const systemUserId = 'widget-system-user'
 
@@ -89,9 +91,9 @@ export class WidgetService {
   /**
    * Get messages for widget conversation
    */
-  async getMessages(conversationId: string, limit: number = 50): Promise<any[]> {
+  async getMessages(conversationId: string, limit: number = 50, companyId: string): Promise<any[]> {
     return (prisma as any).message.findMany({
-      where: { conversationId },
+      where: { conversationId, conversation: { companyId } },
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {

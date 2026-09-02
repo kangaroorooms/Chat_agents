@@ -8,6 +8,8 @@ import { RegisterSchema, LoginSchema } from './auth.dto'
 import CookieService from './cookie.service'
 import TokenService, { JwtPayload } from './token.service'
 import AuthConfig from '../../config/auth'
+import { auditLogService } from '../audit/audit.service'
+import { identityService } from '../security/identity.service'
 
 const authService = new AuthService()
 
@@ -41,15 +43,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       return res.status(400).json({ message: 'Invalid payload', details: parsed.error.format() })
     }
 
-    const { email, password } = parsed.data
+    const { email, password, mfaToken } = parsed.data
 
     let result
     try {
-      result = await authService.login(email, password)
+      result = await authService.login(email, password, mfaToken)
     } catch (err: any) {
       const msg = err?.message || String(err)
-      if (msg === 'Invalid credentials') return res.status(401).json({ message: 'Invalid credentials' })
-      if (msg === 'Account inactive') return res.status(403).json({ message: 'Account disabled' })
+      if (msg === 'Invalid credentials') { void auditLogService.log(null, 'LOGIN_FAILED', 'user', 'unknown', undefined, { email }); return res.status(401).json({ message: 'Invalid credentials' }) }
+      if (msg === 'Account inactive') { void auditLogService.log(null, 'LOGIN_FAILED', 'user', 'inactive', undefined, { email }); return res.status(403).json({ message: 'Account disabled' }) }
+      if (msg === 'MFA required') return res.status(401).json({ message: 'MFA required' })
       return next(err)
     }
 
@@ -59,6 +62,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const deviceId = (req.body as { deviceId?: string }).deviceId || undefined
 
     const refresh = await refreshTokenService.create(result.user.id, { deviceId, deviceName, ip, ua })
+    if (result.user.companyId) void auditLogService.log(result.user.companyId, 'LOGIN_SUCCESS', 'user', result.user.id, result.user.id)
 
     res.cookie('refreshToken', refresh.token, CookieService.getRefreshCookieOptions())
 
@@ -80,6 +84,11 @@ export const refresh = async (req: Request, res: Response, next: NextFunction) =
 
     if (!record.user || !record.user.isActive) {
       return res.status(403).json({ message: 'Account disabled' })
+    }
+    if (record.user.companyId) {
+      const policy = await identityService.getPolicy(record.user.companyId)
+      const sessionActivity = record.lastUsedAt?.getTime() ?? record.createdAt.getTime()
+      if (sessionActivity + policy.sessionTimeoutMinutes * 60 * 1000 < Date.now()) return res.status(401).json({ message: 'Session expired' })
     }
 
     const origin = req.get('origin')

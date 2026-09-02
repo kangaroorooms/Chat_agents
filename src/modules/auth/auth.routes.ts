@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { authMiddleware } from '../../middleware/auth.middleware'
+import { authLimiter } from '../../middleware/rate-limit.middleware'
+import { requireCompanyContext } from '../../middleware/company.middleware'
 
 import {
   login,
@@ -13,12 +15,12 @@ import {
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
-router.post('/refresh', refresh);
+router.post("/register", authLimiter, register);
+router.post("/login", authLimiter, login);
+router.post('/refresh', authLimiter, refresh);
 router.post('/logout', logout);
-router.post('/logout-all', authMiddleware, logoutAll);
-router.get('/sessions', authMiddleware, sessions);
-router.delete('/sessions/:id', authMiddleware, revokeSession);
+router.post('/logout-all', authMiddleware, requireCompanyContext, logoutAll);
+router.get('/sessions', authMiddleware, requireCompanyContext, sessions);
+router.delete('/sessions/:id', authMiddleware, requireCompanyContext, revokeSession);
 
 export default router;

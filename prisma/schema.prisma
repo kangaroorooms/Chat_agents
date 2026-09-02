@@ -21,6 +21,11 @@ model User {
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   isActive  Boolean  @default(true)
+  mfaEnabled Boolean @default(false)
+  mfaSecret String?
+  recoveryCodes Json?
+  scimExternalId String?
+  provisionedByScim Boolean @default(false)
 
   messages              Message[]
   participants          ConversationParticipant[]
@@ -56,6 +61,7 @@ model Conversation {
   unreadCount   Int       @default(0)
   metadata      Json?
   archivedAt    DateTime?
+  closedAt      DateTime?
   dueAt         DateTime?  // SLA due date
   breachedAt    DateTime?  // SLA breach timestamp
 
@@ -119,8 +125,8 @@ model Message {
   companyId String?
   company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
 
-  senderId String
-  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId String?
+  sender   User?  @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
@@ -217,6 +223,67 @@ model RefreshToken {
   @@index([userId])
 }
 
+enum SsoProvider {
+  OKTA
+  AZURE_AD
+  GOOGLE_WORKSPACE
+}
+
+model CompanySecurityPolicy {
+  id String @id @default(uuid())
+  companyId String @unique
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  minPasswordLength Int @default(12)
+  requireUppercase Boolean @default(true)
+  requireLowercase Boolean @default(true)
+  requireNumber Boolean @default(true)
+  requireSymbol Boolean @default(true)
+  sessionTimeoutMinutes Int @default(480)
+  allowedEmailDomains String[]
+  ipAllowlist String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SsoConnection {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  provider SsoProvider
+  entityId String
+  ssoUrl String
+  certificate String
+  enabled Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([companyId, provider])
+  @@index([companyId])
+}
+
+model ScimToken {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  active Boolean @default(true)
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([companyId])
+}
+
+model ScimGroup {
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  externalId String
+  displayName String
+  members Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([companyId, externalId])
+  @@index([companyId])
+}
+
 model KnowledgeDocument {
   id        String  @id @default(uuid())
   companyId String
@@ -232,6 +299,7 @@ model KnowledgeDocument {
   updatedBy  String?
 
   chunks KnowledgeChunk[]
+  trainings KnowledgeTraining[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -348,6 +416,7 @@ enum SubscriptionPlanType {
   FREE
   STARTER
   PRO
+  GROWTH
   ENTERPRISE
 }
 
@@ -365,6 +434,8 @@ model SubscriptionPlan {
   maxAgents         Int
   maxConversations  Int
   maxDocuments      Int
+  maxAiRequests     Int      @default(0)
+  stripePriceId     String?  @unique
   aiEnabled         Boolean  @default(false)
 
   subscriptions CompanySubscription[]
@@ -393,6 +464,21 @@ model CompanySubscription {
 
 // ============ PHASE 3: AUDIT LOGS ============
 enum AuditAction {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  PASSWORD_CHANGED
+  ROLE_CHANGED
+  API_KEY_USED
+  API_KEY_SCOPE_DENIED
+  SSO_CONFIGURED
+  SECURITY_POLICY_CHANGED
+  PERMISSION_CHANGED
+  SCIM_TOKEN_CREATED
+  WEBHOOK_RECEIVED
+  WEBHOOK_DELIVERED
+  WEBHOOK_FAILED
+  AI_RESPONSE_GENERATED
+  AI_HANDOFF
   USER_CREATED
   USER_UPDATED
   USER_DELETED
@@ -406,9 +492,140 @@ enum AuditAction {
   API_KEY_DELETED
 }
 
+enum UsageMetricType {
+  CONVERSATIONS
+  MESSAGES
+  AI_REQUESTS
+  AI_TOKENS
+  KB_DOCUMENTS
+  KB_STORAGE_BYTES
+  AGENTS
+}
+
+enum UsageAlertThreshold {
+  EIGHTY
+  NINETY_FIVE
+  ONE_HUNDRED
+}
+
+model BillingCustomer {
+  id String @id @default(uuid())
+  companyId String @unique
+  stripeCustomerId String @unique
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([companyId])
+}
+
+model BillingSubscription {
+  id String @id @default(uuid())
+  companyId String
+  stripeSubscriptionId String @unique
+  stripePriceId String
+  status BillingSubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  cancelAtPeriodEnd Boolean @default(false)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([companyId])
+}
+
+enum BillingSubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  UNPAID
+  INCOMPLETE
+}
+
+model BillingInvoice {
+  id String @id @default(uuid())
+  companyId String
+  stripeInvoiceId String @unique
+  stripeCustomerId String?
+  status BillingInvoiceStatus
+  amountDue Int
+  amountPaid Int @default(0)
+  currency String @default("usd")
+  hostedInvoiceUrl String?
+  invoicePdf String?
+  periodStart DateTime?
+  periodEnd DateTime?
+  paidAt DateTime?
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([companyId, createdAt])
+}
+enum BillingInvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+  FAILED
+}
+
+model BillingEvent {
+  id String @id @default(uuid())
+  companyId String?
+  stripeEventId String @unique
+  type String
+  payload Json
+  processedAt DateTime?
+  failedAt DateTime?
+  failureReason String?
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+  @@index([companyId, createdAt])
+}
+
+model UsageMetric {
+  id String @id @default(uuid())
+  companyId String
+  metricType UsageMetricType
+  quantity Int
+  timestamp DateTime @default(now())
+  metadata Json?
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  @@index([companyId, metricType, timestamp])
+}
+
+model AIUsageCost {
+  id String @id @default(uuid())
+  companyId String
+  provider String
+  model String
+  inputTokens Int @default(0)
+  outputTokens Int @default(0)
+  totalTokens Int
+  estimatedCost Float
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([companyId, createdAt])
+}
+
+model UsageAlert {
+  id String @id @default(uuid())
+  companyId String
+  metricType UsageMetricType
+  threshold UsageAlertThreshold
+  percentage Int
+  limit Int
+  quantity Int
+  periodStart DateTime
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([companyId, metricType, threshold, periodStart])
+  @@index([companyId, createdAt])
+}
+
 model AuditLog {
   id           String      @id @default(uuid())
-  companyId    String
+  companyId    String?
   userId       String?
   action       AuditAction
   resourceType String
@@ -416,6 +633,7 @@ model AuditLog {
   metadata     Json?
   createdAt    DateTime    @default(now())
 
+  company       Company?    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   @@index([companyId])
   @@index([userId])
   @@index([resourceType])
@@ -432,6 +650,7 @@ model SLAPolicy {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  @@unique([companyId])
   @@index([companyId])
 }
 
@@ -533,9 +752,30 @@ model CompanyApiKey {
   createdAt DateTime @default(now())
   lastUsedAt DateTime?
   revokedAt DateTime?
+  expiresAt DateTime?
+  scopes CompanyApiKeyScope[] @default([])
+  rotatedAt DateTime?
 
   @@index([companyId])
   @@index([createdAt])
+}
+
+enum CompanyApiKeyScope {
+  READ
+  WRITE
+  ADMIN
+}
+
+model WidgetToken {
+  id             String   @id @default(uuid())
+  companyId      String
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  token          String   @unique
+  allowedDomains Json
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@index([companyId])
 }
 
 // ============ ADD NEW RELATIONSHIPS TO COMPANY ============
@@ -545,16 +785,30 @@ model Company {
   slug    String        @unique
   logoUrl String?
   status  CompanyStatus @default(ACTIVE)
+  primaryColor String? @default("#2563eb")
+  widgetWelcomeMessage String?
 
   users              User[]
+  securityPolicy     CompanySecurityPolicy?
+  ssoConnections     SsoConnection[]
+  scimTokens         ScimToken[]
+  scimGroups         ScimGroup[]
   conversations      Conversation[]
   knowledgeDocuments KnowledgeDocument[]
   aiSettings         AISettings?
   subscription       CompanySubscription?
+  billingCustomer    BillingCustomer?
+  billingSubscription BillingSubscription?
+  billingInvoices    BillingInvoice[]
+  billingEvents      BillingEvent[]
+  usageMetrics       UsageMetric[]
+  aiUsageCosts       AIUsageCost[]
+  usageAlerts        UsageAlert[]
   slaPolicies        SLAPolicy[]
   emailChannels      EmailChannel[]
   webhooks           Webhook[]
   apiKeys            CompanyApiKey[]
+  widgetTokens       WidgetToken[]
   auditLogs          AuditLog[]
 
   createdAt   DateTime      @default(now())

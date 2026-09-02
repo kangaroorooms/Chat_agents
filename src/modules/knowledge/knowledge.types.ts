@@ -29,7 +29,7 @@ export interface RetrievedDocument {
 export interface RetrieverService {
   retrieve(query: RetrievalQuery): Promise<RetrievedDocument[]>
   indexDocument(documentId: string): Promise<void>
-  deleteDocument(documentId: string): Promise<void>
+  deleteDocument(documentId: string, companyId?: string): Promise<void>
 }
 
 export interface PromptContext {

@@ -10,6 +10,7 @@ import { conversationWorkflowService } from '../conversations/conversation.workf
 import { prisma } from '../../config/prisma'
 import { sentimentService } from '../ai/sentiment/sentiment.service'
 import { analyticsService } from '../ai/analytics/analytics.service'
+import { assertCompanyResourceOwnership } from '../../security/resource-ownership'
 
 const conversationService = new ConversationService()
 
@@ -19,7 +20,8 @@ const standardResponse = (res: Response, data: any, message = '', pagination?: a
 export const createMessage = async (req: Request, res: Response) => {
   try {
     const parsed = CreateMessageSchema.parse(req.body)
-    const msg = await messageService.createMessage(req.userId as string, parsed)
+    await assertCompanyResourceOwnership(req.companyId!, 'conversation', parsed.conversationId)
+    const msg = await messageService.createMessage(req.userId as string, parsed, req.companyId)
 
     try {
       const io = getIo()
@@ -126,7 +128,8 @@ export const listMessages = async (req: Request, res: Response) => {
   try {
     const q = ListMessagesQuery.parse(req.query)
     const conversationId = req.params.conversationId as string
-    const result = await messageService.listMessages(req.userId as string, conversationId, { limit: q.limit, cursor: q.cursor })
+    await assertCompanyResourceOwnership(req.companyId!, 'conversation', conversationId)
+    const result = await messageService.listMessages(req.userId as string, conversationId, { limit: q.limit, cursor: q.cursor }, req.companyId)
     return standardResponse(res, result.items, 'OK', result.pagination)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -136,7 +139,8 @@ export const listMessages = async (req: Request, res: Response) => {
 export const getMessage = async (req: Request, res: Response) => {
   try {
     const id = req.params.messageId as string
-    const msg = await messageService.getMessageById(req.userId as string, id)
+    await assertCompanyResourceOwnership(req.companyId!, 'message', id)
+    const msg = await messageService.getMessageById(req.userId as string, id, req.companyId)
     return standardResponse(res, msg)
   } catch (error) {
     return res.status(404).json({ success: false, message: error instanceof Error ? error.message : 'Not found', data: null })
@@ -147,7 +151,8 @@ export const editMessage = async (req: Request, res: Response) => {
   try {
     const parsed = EditMessageSchema.parse(req.body)
     const id = req.params.messageId as string
-    const updated = await messageService.editMessage(req.userId as string, id, parsed.content, parsed.metadata)
+    await assertCompanyResourceOwnership(req.companyId!, 'message', id)
+    const updated = await messageService.editMessage(req.userId as string, id, parsed.content, parsed.metadata, req.companyId)
     return standardResponse(res, updated)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -157,7 +162,8 @@ export const editMessage = async (req: Request, res: Response) => {
 export const deleteMessage = async (req: Request, res: Response) => {
   try {
     const id = req.params.messageId as string
-    const result = await messageService.deleteMessage(req.userId as string, id)
+    await assertCompanyResourceOwnership(req.companyId!, 'message', id)
+    const result = await messageService.deleteMessage(req.userId as string, id, req.companyId)
     return standardResponse(res, result)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authMiddleware } from '../../../middleware/auth.middleware'
+import { requireCompanyContext } from '../../../middleware/company.middleware'
 import { requireRole } from '../../../middleware/authorize.middleware'
 import {
   trainDocument,
@@ -16,8 +17,9 @@ const router = Router({ mergeParams: true })
  * GET /companies/:companyId/knowledge/ready
  */
 
-router.post('/train', authMiddleware, requireRole(['ADMIN', 'SUPER_ADMIN']), trainDocument)
-router.get('/training/:documentId/status', authMiddleware, getTrainingStatus)
-router.get('/ready', authMiddleware, listReadyDocuments)
+router.use(authMiddleware, requireCompanyContext)
+router.post('/train', requireRole(['ADMIN', 'SUPER_ADMIN']), trainDocument)
+router.get('/training/:documentId/status', getTrainingStatus)
+router.get('/ready', listReadyDocuments)
 
 export default router

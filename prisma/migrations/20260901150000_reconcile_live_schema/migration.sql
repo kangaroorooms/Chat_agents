@@ -1,0 +1,25 @@
+DO $$ BEGIN
+  CREATE TYPE "TrainingStatus" AS ENUM ('PENDING', 'PROCESSING', 'READY', 'FAILED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'LOGIN_SUCCESS';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'LOGIN_FAILED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'PASSWORD_CHANGED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'ROLE_CHANGED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'API_KEY_USED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'WEBHOOK_RECEIVED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'WEBHOOK_DELIVERED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'AI_RESPONSE_GENERATED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'AI_HANDOFF';
+ALTER TABLE "Conversation" DROP CONSTRAINT IF EXISTS "Conversation_widgetVisitorId_fkey";
+DROP INDEX IF EXISTS "Conversation_widgetVisitorId_idx";
+ALTER TABLE "Conversation" DROP COLUMN IF EXISTS "widgetVisitorId";
+CREATE TABLE IF NOT EXISTS "KnowledgeTraining" ("id" TEXT NOT NULL, "documentId" TEXT NOT NULL, "status" "TrainingStatus" NOT NULL DEFAULT 'PENDING', "error" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" TIMESTAMP(3) NOT NULL, CONSTRAINT "KnowledgeTraining_pkey" PRIMARY KEY ("id"));
+CREATE INDEX IF NOT EXISTS "KnowledgeTraining_documentId_idx" ON "KnowledgeTraining"("documentId");
+ALTER TABLE "KnowledgeTraining" ADD CONSTRAINT "KnowledgeTraining_documentId_fkey" FOREIGN KEY ("documentId") REFERENCES "KnowledgeDocument"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+CREATE INDEX IF NOT EXISTS "BillingCustomer_companyId_idx" ON "BillingCustomer"("companyId");
+CREATE INDEX IF NOT EXISTS "CompanySubscription_companyId_idx" ON "CompanySubscription"("companyId");
+CREATE INDEX IF NOT EXISTS "EmailChannel_companyId_idx" ON "EmailChannel"("companyId");
+CREATE UNIQUE INDEX IF NOT EXISTS "SLAPolicy_companyId_key" ON "SLAPolicy"("companyId");
+ALTER TABLE "Company" ALTER COLUMN "primaryColor" SET DEFAULT '#2563eb';
+ALTER TABLE "CompanyApiKey" ALTER COLUMN "scopes" SET DEFAULT ARRAY[]::"CompanyApiKeyScope"[];

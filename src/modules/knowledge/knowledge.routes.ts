@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { prisma } from '../../config/prisma'
 import { authMiddleware } from '../../middleware/auth.middleware'
+import { requireCompanyContext } from '../../middleware/company.middleware'
 import { requireRole } from '../../middleware/authorize.middleware'
 import { getKnowledgeService } from './knowledge.service'
 import {
@@ -15,16 +16,18 @@ import { usageService } from '../billing/usage.service'
 const router = Router()
 const knowledgeService = getKnowledgeService()
 const adminOnly = requireRole(['ADMIN', 'SUPER_ADMIN'])
+router.use(authMiddleware, requireCompanyContext)
 
 /**
  * POST /api/knowledge/documents
  * Add a new document to the knowledge base
  */
-router.post('/documents', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+router.post('/documents', adminOnly, async (req: Request, res: Response) => {
   try {
     const parsed = CreateKnowledgeDocumentSchema.parse(req.body)
+    if (parsed.companyId !== req.companyId) return res.status(403).json({ error: 'Company access denied' })
 
-    const company = await prisma.company.findUnique({
+    const company = await prisma.company.findFirst({
       where: { id: parsed.companyId },
     })
 
@@ -62,11 +65,11 @@ router.post('/documents', authMiddleware, adminOnly, async (req: Request, res: R
  * GET /api/knowledge/documents/:id
  * Get a document by ID
  */
-router.get('/documents/:id', authMiddleware, async (req: Request, res: Response) => {
+router.get('/documents/:id', async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
-    const document = await prisma.knowledgeDocument.findUnique({
-      where: { id },
+    const document = await prisma.knowledgeDocument.findFirst({
+      where: { id, companyId: req.companyId },
       include: {
         chunks: {
           select: {
@@ -99,9 +102,10 @@ router.get('/documents/:id', authMiddleware, async (req: Request, res: Response)
  * GET /api/knowledge/companies/:companyId/documents
  * List all documents for a company
  */
-router.get('/companies/:companyId/documents', authMiddleware, async (req: Request, res: Response) => {
+router.get('/companies/:companyId/documents', async (req: Request, res: Response) => {
   try {
     const companyId = Array.isArray(req.params.companyId) ? req.params.companyId[0] : req.params.companyId
+    if (companyId !== req.companyId) return res.status(403).json({ error: 'Company access denied' })
     const query = ListKnowledgeDocumentsQuerySchema.parse(req.query)
     const skip = (query.page - 1) * query.limit
 
@@ -144,18 +148,18 @@ router.get('/companies/:companyId/documents', authMiddleware, async (req: Reques
  * DELETE /api/knowledge/documents/:id
  * Delete a document
  */
-router.delete('/documents/:id', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+router.delete('/documents/:id', adminOnly, async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
-    const document = await prisma.knowledgeDocument.findUnique({
-      where: { id },
+    const document = await prisma.knowledgeDocument.findFirst({
+      where: { id, companyId: req.companyId },
     })
 
     if (!document) {
       return res.status(404).json({ error: 'Document not found' })
     }
 
-    await knowledgeService.deleteDocument(id)
+    await knowledgeService.deleteDocument(id, req.companyId)
 
     return res.json({
       success: true,
@@ -173,18 +177,18 @@ router.delete('/documents/:id', authMiddleware, adminOnly, async (req: Request, 
  * POST /api/knowledge/documents/:id/reindex
  * Reindex a document
  */
-router.post('/documents/:id/reindex', authMiddleware, adminOnly, async (req: Request, res: Response) => {
+router.post('/documents/:id/reindex', adminOnly, async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id
-    const document = await prisma.knowledgeDocument.findUnique({
-      where: { id },
+    const document = await prisma.knowledgeDocument.findFirst({
+      where: { id, companyId: req.companyId },
     })
 
     if (!document) {
       return res.status(404).json({ error: 'Document not found' })
     }
 
-    const result = await knowledgeService.reindexDocument(id)
+    const result = await knowledgeService.reindexDocument(id, req.companyId)
 
     return res.json({
       success: true,
@@ -202,13 +206,13 @@ router.post('/documents/:id/reindex', authMiddleware, adminOnly, async (req: Req
  * POST /api/knowledge/search
  * Search for relevant documents
  */
-router.post('/search', authMiddleware, async (req: Request, res: Response) => {
+router.post('/search', async (req: Request, res: Response) => {
   try {
     const parsed = SearchKnowledgeSchema.parse(req.body)
 
     const results = await knowledgeService.retrieveDocuments({
       query: parsed.query,
-      companyId: parsed.companyId,
+      companyId: req.companyId!,
       topK: parsed.topK,
       threshold: parsed.threshold,
     })

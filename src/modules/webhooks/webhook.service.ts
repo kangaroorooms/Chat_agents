@@ -1,5 +1,9 @@
-import { prisma } from '../../../config/prisma'
+import { prisma } from '../../config/prisma'
 import crypto from 'crypto'
+import { assertCompanyResourceOwnership } from '../../security/resource-ownership'
+import { auditLogService } from '../audit/audit.service'
+import { enqueue } from '../../infrastructure/queues'
+import { webhookDeliveries } from '../../infrastructure/metrics'
 
 export class WebhookService {
   /**
@@ -29,15 +33,16 @@ export class WebhookService {
   /**
    * Delete webhook
    */
-  async delete(webhookId: string): Promise<any> {
+  async delete(webhookId: string, companyId: string): Promise<any> {
+    await assertCompanyResourceOwnership(companyId, 'webhook', webhookId)
     return (prisma as any).webhook.delete({ where: { id: webhookId } })
   }
 
   /**
    * Dispatch webhook with retry
    */
-  async dispatch(webhookId: string, event: string, payload: any): Promise<void> {
-    const webhook = await (prisma as any).webhook.findUnique({ where: { id: webhookId } })
+  async dispatch(webhookId: string, event: string, payload: any, attempt = 0): Promise<void> {
+    const webhook = await (prisma as any).webhook.findFirst({ where: { id: webhookId } })
     if (!webhook || webhook.status !== 'ACTIVE' || !webhook.events.includes(event)) {
       return
     }
@@ -62,37 +67,29 @@ export class WebhookService {
           payload,
           statusCode: response.status,
           responseBody: await response.text(),
-          attempt: 1,
+          attempt: attempt + 1,
         },
       })
+      void auditLogService.log(webhook.companyId, response.ok ? 'WEBHOOK_DELIVERED' : 'WEBHOOK_FAILED', 'webhook', webhookId, undefined, { event, statusCode: response.status })
+      webhookDeliveries.inc({ status: response.ok ? 'success' : 'failure' })
 
-      if (!response.ok) {
-        await this.scheduleRetry(webhookId, event, payload, 1)
-      }
+      if (!response.ok) throw new Error(`Webhook returned ${response.status}`)
     } catch (error) {
       console.error('Webhook dispatch error:', error)
-      await this.scheduleRetry(webhookId, event, payload, 1)
+      void auditLogService.log(webhook.companyId, 'WEBHOOK_FAILED', 'webhook', webhookId, undefined, { event, failed: true })
+      webhookDeliveries.inc({ status: 'error' })
+      throw error
     }
   }
 
-  /**
-   * Schedule retry with exponential backoff
-   */
-  private async scheduleRetry(webhookId: string, event: string, payload: any, attempt: number): Promise<void> {
-    if (attempt >= 3) return // Max 3 retries
+  async enqueueDelivery(webhookId: string, event: string, payload: unknown): Promise<string | null> {
+    return enqueue({ queue: 'webhook', name: 'deliver', data: { webhookId, event, payload } })
+  }
 
-    const backoffMinutes = Math.pow(2, attempt)
-    const nextRetryAt = new Date(Date.now() + backoffMinutes * 60 * 1000)
-
-    await (prisma as any).webhookDelivery.create({
-      data: {
-        webhookId,
-        event,
-        payload,
-        attempt: attempt + 1,
-        nextRetryAt,
-      },
-    })
+  async replayDelivery(companyId: string, deliveryId: string): Promise<string | null> {
+    const delivery = await (prisma as any).webhookDelivery.findFirst({ where: { id: deliveryId, webhook: { companyId } } })
+    if (!delivery) throw new Error('Webhook delivery not found')
+    return this.enqueueDelivery(delivery.webhookId, delivery.event, delivery.payload)
   }
 
   /**

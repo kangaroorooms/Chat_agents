@@ -1,5 +1,7 @@
 import { Router } from 'express'
 import { startConversation, sendMessage, getMessages } from './widget.controller'
+import { requireWidgetToken } from '../../middleware/widget.middleware'
+import { widgetLimiter } from '../../middleware/rate-limit.middleware'
 
 const router = Router()
 
@@ -10,6 +12,7 @@ const router = Router()
  * GET /widget/messages/:conversationId - Get messages
  */
 
+router.use(widgetLimiter, requireWidgetToken)
 router.post('/start-conversation', startConversation)
 router.post('/send-message', sendMessage)
 router.get('/messages/:conversationId', getMessages)

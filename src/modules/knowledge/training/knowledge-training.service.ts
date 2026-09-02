@@ -37,8 +37,8 @@ export class KnowledgeTrainingService {
   async trainDocument(documentId: string, companyId: string): Promise<void> {
     try {
       // Find the document
-      const doc = await (prisma as any).knowledgeDocument.findUnique({
-        where: { id: documentId },
+      const doc = await (prisma as any).knowledgeDocument.findFirst({
+        where: { id: documentId, companyId },
       })
 
       if (!doc) {

@@ -114,10 +114,10 @@ export class IndexingServiceImpl {
     }
   }
 
-  async reindexDocument(documentId: string): Promise<IndexingResult> {
+  async reindexDocument(documentId: string, companyId?: string): Promise<IndexingResult> {
     try {
-      const document = await prisma.knowledgeDocument.findUnique({
-        where: { id: documentId },
+      const document = await prisma.knowledgeDocument.findFirst({
+        where: { id: documentId, ...(companyId ? { companyId } : {}) },
       })
 
       if (!document) {

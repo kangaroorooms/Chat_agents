@@ -22,9 +22,11 @@ import {
 } from './socket.dto'
 
 let io: any | null = null
+let httpServerRef: ReturnType<typeof createServer> | null = null
 
 export function initSocketServer(port?: number) {
   const httpServer = createServer(app as any as (req: IncomingMessage, res: ServerResponse) => void)
+  httpServerRef = httpServer
   // lazy require socket.io to avoid missing compile-time dep
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { Server } = require('socket.io')
@@ -325,4 +327,11 @@ export function initSocketServer(port?: number) {
 export function getIo() {
   if (!io) throw new Error('Socket.io not initialized')
   return io
+}
+
+export async function closeSocketServer(): Promise<void> {
+  if (!httpServerRef) return
+  await new Promise<void>((resolve, reject) => httpServerRef!.close((error) => error ? reject(error) : resolve()))
+  httpServerRef = null
+  io = null
 }

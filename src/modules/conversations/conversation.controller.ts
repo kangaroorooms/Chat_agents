@@ -3,6 +3,7 @@ import { Request, Response } from 'express'
 import { conversationService } from './conversation.service'
 import { conversationWorkflowService } from './conversation.workflow'
 import { CreateConversationSchema, ListConversationsQuery, ChangeStateSchema, ParticipantSchema, AssignOwnerSchema, TransferConversationSchema, EscalateConversationSchema, HandoffToAgentSchema } from './conversation.dto'
+import { assertConversationAccess } from '../../security/tenant-access'
 
 const standardResponse = (res: Response, data: any, message = '', pagination?: any, status = 200) =>
   res.status(status).json({ success: true, message, data, pagination: pagination || null })
@@ -12,7 +13,7 @@ export const createConversation = async (req: Request, res: Response) => {
     const parsed = CreateConversationSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid payload', data: null, details: parsed.error.format() })
 
-    const conversation = await conversationService.createConversation(req.userId as string, parsed.data.participantId)
+    const conversation = await conversationService.createConversation(req.userId as string, parsed.data.participantId, req.companyId!)
     return standardResponse(res, conversation, 'Created', undefined, 201)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -22,7 +23,7 @@ export const createConversation = async (req: Request, res: Response) => {
 export const listConversations = async (req: Request, res: Response) => {
   try {
     const q = ListConversationsQuery.parse(req.query)
-    const result = await conversationService.listConversations(req.userId as string, { limit: q.limit, cursor: q.cursor, search: q.search, state: q.state })
+    const result = await conversationService.listConversations(req.userId as string, { limit: q.limit, cursor: q.cursor, search: q.search, state: q.state, companyId: req.companyId })
     return standardResponse(res, result.items, 'OK', result.pagination)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -37,7 +38,7 @@ export const getAgentQueue = async (req: Request, res: Response) => {
       limit: q.limit,
       cursor: q.cursor,
       search: q.search,
-      companyId,
+      companyId: req.companyId,
     })
     return standardResponse(res, result.items, 'OK', result.pagination)
   } catch (error) {
@@ -51,6 +52,7 @@ export const deleteConversation = async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ success: false, message: 'Missing auth', data: null })
 
     const conversationId = req.params.conversationId as string
+    await assertConversationAccess(req.companyId!, conversationId)
 
     const result = await conversationService.deleteConversation(userId, conversationId)
 
@@ -65,6 +67,7 @@ export const deleteConversation = async (req: Request, res: Response) => {
 export const getConversation = async (req: Request, res: Response) => {
   try {
     const id = req.params.conversationId as string
+    await assertConversationAccess(req.companyId!, id)
     const conversation = await conversationService.getConversationById(req.userId as string, id)
     return standardResponse(res, conversation)
   } catch (error) {
@@ -78,6 +81,7 @@ export const changeState = async (req: Request, res: Response) => {
     let updated
 
     if (parsed.state === 'PENDING') {
+      await assertConversationAccess(req.companyId!, req.params.conversationId as string)
       updated = await conversationWorkflowService.resolve(req.userId as string, req.params.conversationId as string)
     } else if (parsed.state === 'CLOSED') {
       updated = await conversationWorkflowService.close(req.userId as string, req.params.conversationId as string)
@@ -96,7 +100,8 @@ export const changeState = async (req: Request, res: Response) => {
 export const addParticipant = async (req: Request, res: Response) => {
   try {
     const parsed = ParticipantSchema.parse(req.body)
-    const result = await conversationService.addParticipant(req.userId as string, req.params.conversationId as string, parsed.userId)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
+    const result = await conversationService.addParticipant(req.userId as string, req.params.conversationId as string, parsed.userId, req.companyId!)
     return standardResponse(res, result)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -106,7 +111,8 @@ export const addParticipant = async (req: Request, res: Response) => {
 export const removeParticipant = async (req: Request, res: Response) => {
   try {
     const participantId = req.params.participantId as string
-    const result = await conversationService.removeParticipant(req.userId as string, req.params.conversationId as string, participantId)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
+    const result = await conversationService.removeParticipant(req.userId as string, req.params.conversationId as string, participantId, req.companyId!)
     return standardResponse(res, result)
   } catch (error) {
     return res.status(400).json({ success: false, message: error instanceof Error ? error.message : 'Unknown error', data: null })
@@ -116,6 +122,7 @@ export const removeParticipant = async (req: Request, res: Response) => {
 export const assignOwner = async (req: Request, res: Response) => {
   try {
     const parsed = AssignOwnerSchema.parse(req.body)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.assign(req.userId as string, req.params.conversationId as string, parsed.ownerId)
     return standardResponse(res, result)
   } catch (error) {
@@ -126,6 +133,7 @@ export const assignOwner = async (req: Request, res: Response) => {
 export const transferConversation = async (req: Request, res: Response) => {
   try {
     const parsed = TransferConversationSchema.parse(req.body)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.transfer(req.userId as string, req.params.conversationId as string, parsed.toAgentId)
     return standardResponse(res, result)
   } catch (error) {
@@ -136,6 +144,7 @@ export const transferConversation = async (req: Request, res: Response) => {
 export const escalateConversation = async (req: Request, res: Response) => {
   try {
     const parsed = EscalateConversationSchema.parse(req.body)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.escalate(req.userId as string, req.params.conversationId as string, parsed.targetAgentId)
     return standardResponse(res, result)
   } catch (error) {
@@ -145,6 +154,7 @@ export const escalateConversation = async (req: Request, res: Response) => {
 
 export const resolveConversation = async (req: Request, res: Response) => {
   try {
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.resolve(req.userId as string, req.params.conversationId as string)
     return standardResponse(res, result)
   } catch (error) {
@@ -154,6 +164,7 @@ export const resolveConversation = async (req: Request, res: Response) => {
 
 export const closeConversation = async (req: Request, res: Response) => {
   try {
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.close(req.userId as string, req.params.conversationId as string)
     return standardResponse(res, result)
   } catch (error) {
@@ -163,6 +174,7 @@ export const closeConversation = async (req: Request, res: Response) => {
 
 export const reopenConversation = async (req: Request, res: Response) => {
   try {
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.reopen(req.userId as string, req.params.conversationId as string)
     return standardResponse(res, result)
   } catch (error) {
@@ -172,6 +184,7 @@ export const reopenConversation = async (req: Request, res: Response) => {
 
 export const handoffToAI = async (req: Request, res: Response) => {
   try {
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.handoffToAI(req.userId as string, req.params.conversationId as string)
     return standardResponse(res, result)
   } catch (error) {
@@ -182,6 +195,7 @@ export const handoffToAI = async (req: Request, res: Response) => {
 export const handoffToAgent = async (req: Request, res: Response) => {
   try {
     const parsed = HandoffToAgentSchema.parse(req.body)
+    await assertConversationAccess(req.companyId!, req.params.conversationId as string)
     const result = await conversationWorkflowService.handoffToAgent(req.userId as string, req.params.conversationId as string, parsed.agentId)
     return standardResponse(res, result)
   } catch (error) {

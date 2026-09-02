@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { knowledgeTrainingService } from './knowledge-training.service'
+import { enqueue } from '../../../infrastructure/queues'
 
 export const trainDocument = async (req: Request, res: Response) => {
   try {
@@ -9,7 +10,7 @@ export const trainDocument = async (req: Request, res: Response) => {
     const companyId = (companyIdParam || '') as string
     const { documentId } = req.body
 
-    if (!companyId || !documentId) {
+    if (!companyId || companyId !== req.companyId || !documentId) {
       return res.status(400).json({
         success: false,
         message: 'companyId and documentId are required',
@@ -17,14 +18,13 @@ export const trainDocument = async (req: Request, res: Response) => {
     }
 
     // Start training asynchronously
-    knowledgeTrainingService.trainDocument(documentId, companyId).catch((err: any) => {
-      console.error('Async training error:', err)
-    })
+    const jobId = await enqueue({ queue: 'knowledgeTraining', name: 'train', data: { documentId, companyId } })
+    if (!jobId) void knowledgeTrainingService.trainDocument(documentId, companyId).catch((err: any) => console.error('Training error:', err))
 
     return res.status(202).json({
       success: true,
       message: 'Training started',
-      data: { documentId },
+      data: { documentId, jobId },
     })
   } catch (error) {
     console.error('Train document error:', error)
@@ -66,7 +66,7 @@ export const listReadyDocuments = async (req: Request, res: Response) => {
       ? req.params.companyId[0] 
       : req.params.companyId
 
-    if (!companyId) {
+    if (!companyId || companyId !== req.companyId) {
       return res.status(400).json({
         success: false,
         message: 'companyId is required',

@@ -1,5 +1,6 @@
 import { prisma } from '../../config/prisma'
 import { usageService } from '../billing/usage.service'
+import { enqueue } from '../../infrastructure/queues'
 
 type InboundEmail = { to: string; from: string; subject?: string; text: string; messageId?: string }
 export class EmailService {
@@ -30,6 +31,12 @@ export class EmailService {
         if (!response.ok) throw new Error(`Mailgun returned ${response.status}`)
       } else throw new Error('Unsupported email provider')
     } catch (error) { await prisma.emailChannel.update({ where: { id: channel.id }, data: { status: 'ERROR', lastErrorAt: new Date(), lastErrorMsg: error instanceof Error ? error.message : 'Email delivery failed' } }); throw error }
+  }
+
+  async enqueueReply(conversationId: string, content: string) {
+    const jobId = await enqueue({ queue: 'email', name: 'send-reply', data: { conversationId, content } })
+    if (!jobId) await this.sendReply(conversationId, content)
+    return jobId
   }
 }
 export const emailService = new EmailService()

@@ -77,7 +77,7 @@ export class RetrieverServiceImpl implements RetrieverService {
 
   async indexDocument(documentId: string): Promise<void> {
     try {
-      const document = await prisma.knowledgeDocument.findUnique({
+      const document = await prisma.knowledgeDocument.findFirst({
         where: { id: documentId },
         include: {
           chunks: true,
@@ -122,11 +122,10 @@ export class RetrieverServiceImpl implements RetrieverService {
     }
   }
 
-  async deleteDocument(documentId: string): Promise<void> {
+  async deleteDocument(documentId: string, companyId?: string): Promise<void> {
     try {
-      await prisma.knowledgeDocument.delete({
-        where: { id: documentId },
-      })
+      const result = await prisma.knowledgeDocument.deleteMany({ where: { id: documentId, ...(companyId ? { companyId } : {}) } })
+      if (!result.count) throw new Error(`Document not found: ${documentId}`)
       console.log(`Deleted document: ${documentId}`)
     } catch (error) {
       console.error(`Error deleting document ${documentId}:`, error)

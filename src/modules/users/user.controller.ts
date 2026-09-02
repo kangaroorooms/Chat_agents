@@ -25,7 +25,7 @@ export const getUsers = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid query parameters', details: parsed.error.format() })
     }
 
-    const users = await userService.getUsers(userId, parsed.data)
+    const users = await userService.getUsers(userId, parsed.data, req.companyId)
     return res.json(users)
   } catch (error) {
     return res.status(500).json({
@@ -36,7 +36,7 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const getUser = async (req: Request, res: Response) => {
   try {
-    const user = await userService.getUserById(String(req.params.id))
+    const user = await userService.getUserById(String(req.params.id), req.companyId)
     return res.json(user)
   } catch (error) {
     return res.status(404).json({ message: error instanceof Error ? error.message : 'User not found' })
@@ -49,6 +49,7 @@ export const createUser = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: 'Invalid payload', details: parsed.error.format() })
     }
+    if (parsed.data.companyId && parsed.data.companyId !== req.companyId) return res.status(403).json({ message: 'Company access denied' })
 
     const user = await userService.createUser(parsed.data)
     if (user.companyId) await auditLogService.log(user.companyId, 'USER_CREATED', 'user', user.id, req.userId)
@@ -64,9 +65,13 @@ export const updateUser = async (req: Request, res: Response) => {
     if (!parsed.success) {
       return res.status(400).json({ message: 'Invalid payload', details: parsed.error.format() })
     }
+    if (parsed.data.companyId && parsed.data.companyId !== req.companyId) return res.status(403).json({ message: 'Company access denied' })
 
-    const user = await userService.updateUser(String(req.params.id), parsed.data)
+    const before = await userService.getUserById(String(req.params.id))
+    const user = await userService.updateUser(String(req.params.id), parsed.data, req.companyId)
     if (user.companyId) await auditLogService.log(user.companyId, 'USER_UPDATED', 'user', user.id, req.userId)
+    if (user.companyId && parsed.data.password) await auditLogService.log(user.companyId, 'PASSWORD_CHANGED', 'user', user.id, req.userId)
+    if (user.companyId && parsed.data.role && parsed.data.role !== before.role) { await auditLogService.log(user.companyId, 'ROLE_CHANGED', 'user', user.id, req.userId, { from: before.role, to: parsed.data.role }); await auditLogService.log(user.companyId, 'PERMISSION_CHANGED' as any, 'user', user.id, req.userId, { reason: 'role_changed' }) }
     return res.json(user)
   } catch (error) {
     return res.status(400).json({ message: error instanceof Error ? error.message : 'Unable to update user' })
@@ -75,8 +80,8 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const deleteUser = async (req: Request, res: Response) => {
   try {
-    const target = await userService.getUserById(String(req.params.id))
-    await userService.deleteUser(String(req.params.id))
+    const target = await userService.getUserById(String(req.params.id), req.companyId)
+    await userService.deleteUser(String(req.params.id), req.companyId)
     if (target.companyId) await auditLogService.log(target.companyId, 'USER_DELETED', 'user', target.id, req.userId)
     return res.json({ success: true })
   } catch (error) {
@@ -95,7 +100,7 @@ export const searchAgents = async (req: Request, res: Response) => {
       userId,
       typeof req.query.search === 'string' ? req.query.search : undefined,
       typeof req.query.cursor === 'string' ? req.query.cursor : undefined,
-      limit,
+      limit, req.companyId,
     )
 
     return res.json({ success: true, data: result.items, pagination: result.pagination })

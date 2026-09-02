@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from 'express'
 import { authMiddleware } from '../../middleware/auth.middleware'
+import { requireCompanyContext } from '../../middleware/company.middleware'
 import { getAIService } from './ai.service'
 import { messageService } from '../messages/message.service'
 import { conversationWorkflowService } from '../conversations/conversation.workflow'
@@ -10,12 +11,13 @@ import { usageService } from '../billing/usage.service'
 
 const router = Router()
 const AI_SYSTEM_USER_ID = 'ai-system'
+router.use(authMiddleware, requireCompanyContext)
 
 /**
  * POST /api/ai/chat/:conversationId
  * Stream AI response for a user message
  */
-router.post('/chat/:conversationId', authMiddleware, async (req: Request, res: Response) => {
+router.post('/chat/:conversationId', async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string
     const { message } = req.body
@@ -24,7 +26,8 @@ router.post('/chat/:conversationId', authMiddleware, async (req: Request, res: R
     if (!message || !userId) {
       return res.status(400).json({ error: 'Message and userId required' })
     }
-    const billableConversation = await prisma.conversation.findUnique({ where: { id: conversationId }, select: { companyId: true } })
+    const billableConversation = await prisma.conversation.findFirst({ where: { id: conversationId, companyId: req.companyId }, select: { companyId: true } })
+    if (!billableConversation) return res.status(404).json({ error: 'Conversation not found' })
     if (billableConversation?.companyId && !(await billingService.checkPlanLimits(billableConversation.companyId, 'aiRequests'))) return res.status(402).json({ error: 'AI request limit reached for this subscription' })
 
     // Create user message first
@@ -97,7 +100,7 @@ router.post('/chat/:conversationId', authMiddleware, async (req: Request, res: R
  * POST /api/ai/suggestions/:conversationId
  * Generate response suggestions for agents
  */
-router.post('/suggestions/:conversationId', authMiddleware, async (req: Request, res: Response) => {
+router.post('/suggestions/:conversationId', async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string
     const { message } = req.body
@@ -131,7 +134,7 @@ router.post('/suggestions/:conversationId', authMiddleware, async (req: Request,
  * POST /api/ai/conversations/:conversationId/suggest
  * Convenience endpoint to generate and persist suggestions for a conversation
  */
-router.post('/conversations/:conversationId/suggest', authMiddleware, async (req: Request, res: Response) => {
+router.post('/conversations/:conversationId/suggest', async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string
 
@@ -164,9 +167,9 @@ router.post('/conversations/:conversationId/suggest', authMiddleware, async (req
  * GET /api/ai/analytics
  * Query AI analytics for a company
  */
-router.get('/analytics', authMiddleware, async (req: Request, res: Response) => {
+router.get('/analytics', async (req: Request, res: Response) => {
   try {
-    const companyId = (req as any).companyId || req.query.companyId
+    const companyId = req.companyId
     if (!companyId) return res.status(400).json({ error: 'companyId required' })
     const items = await analyticsService.list(String(companyId), { limit: 200 })
     res.json({ items })
@@ -180,7 +183,7 @@ router.get('/analytics', authMiddleware, async (req: Request, res: Response) => 
  * POST /api/ai/summarize/:conversationId
  * Summarize conversation
  */
-router.post('/summarize/:conversationId', authMiddleware, async (req: Request, res: Response) => {
+router.post('/summarize/:conversationId', async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string
 

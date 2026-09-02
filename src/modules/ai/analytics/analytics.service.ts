@@ -1,7 +1,14 @@
 import { prisma } from '../../../config/prisma'
+import { enqueue } from '../../../infrastructure/queues'
 
 export class AnalyticsService {
   async record(event: { companyId: string; conversationId?: string; messageId?: string; eventType: string; confidence?: number; metadata?: any }) {
+    const jobId = await enqueue({ queue: 'analytics', name: 'record', data: event })
+    if (jobId) return
+    await this.recordNow(event)
+  }
+
+  async recordNow(event: { companyId: string; conversationId?: string; messageId?: string; eventType: string; confidence?: number; metadata?: any }) {
     try {
       await (prisma as any).aIAnalytics.create({ data: {
         companyId: event.companyId,

@@ -1,11 +1,12 @@
-import { prisma } from '../../../config/prisma'
+import { prisma } from '../../config/prisma'
 import crypto from 'crypto'
+import { auditLogService } from '../audit/audit.service'
 
 export class ApiKeyService {
   /**
    * Generate new API key
    */
-  async createKey(companyId: string, name: string): Promise<{ id: string; key: string }> {
+  async createKey(companyId: string, name: string, scopes: string[] = [], expiresAt?: Date): Promise<{ id: string; key: string }> {
     const key = `sk_${crypto.randomBytes(24).toString('hex')}`
     const keyHash = crypto.createHash('sha256').update(key).digest('hex')
 
@@ -14,6 +15,8 @@ export class ApiKeyService {
         companyId,
         name,
         keyHash,
+        scopes,
+        expiresAt,
       },
     })
 
@@ -26,16 +29,21 @@ export class ApiKeyService {
   /**
    * Verify API key
    */
-  async verifyKey(key: string): Promise<{ companyId: string } | null> {
+  async verifyKey(key: string): Promise<{ companyId: string; scopes: string[] } | null> {
     const keyHash = crypto.createHash('sha256').update(key).digest('hex')
     
     const record = await (prisma as any).companyApiKey.findUnique({
       where: { keyHash },
     })
 
-    if (!record || record.revokedAt) {
+    const expected = Buffer.from(keyHash, 'utf8')
+    const stored = record ? Buffer.from(record.keyHash, 'utf8') : Buffer.alloc(expected.length)
+    const matches = stored.length === expected.length && crypto.timingSafeEqual(stored, expected)
+    if (!record || !matches || record.revokedAt) {
       return null
     }
+
+    if (record.expiresAt && record.expiresAt <= new Date()) return null
 
     // Update last used
     await (prisma as any).companyApiKey.update({
@@ -43,7 +51,7 @@ export class ApiKeyService {
       data: { lastUsedAt: new Date() },
     })
 
-    return { companyId: record.companyId }
+    return { companyId: record.companyId, scopes: record.scopes || [] }
   }
 
   /**
@@ -58,6 +66,8 @@ export class ApiKeyService {
         createdAt: true,
         lastUsedAt: true,
         revokedAt: true,
+        expiresAt: true,
+        scopes: true,
       },
     })
   }
@@ -70,6 +80,15 @@ export class ApiKeyService {
       where: { id: keyId },
       data: { revokedAt: new Date() },
     })
+  }
+
+  async rotateKey(companyId: string, keyId: string, name: string, scopes: string[] = [], expiresAt?: Date) {
+    const current = await (prisma as any).companyApiKey.findFirst({ where: { id: keyId, companyId, revokedAt: null } })
+    if (!current) throw new Error('API key not found')
+    const replacement = await this.createKey(companyId, name, scopes, expiresAt)
+    await (prisma as any).companyApiKey.update({ where: { id: current.id }, data: { revokedAt: new Date(), rotatedAt: new Date() } })
+    await auditLogService.log(companyId, 'API_KEY_CREATED' as any, 'api_key', replacement.id, undefined, { rotatedFrom: current.id })
+    return replacement
   }
 }
 

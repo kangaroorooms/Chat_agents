@@ -1,6 +1,7 @@
 import { prisma } from '../../config/prisma'
 import PasswordService from './password.service'
 import TokenService from './token.service'
+import { identityService } from '../security/identity.service'
 
 export class AuthService {
   async register(
@@ -45,7 +46,7 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string, mfaToken?: string) {
     try {
       const user = await prisma.user.findUnique({
         where: { email },
@@ -64,6 +65,7 @@ export class AuthService {
       if (!user.isActive) {
         throw new Error('Account inactive')
       }
+      if (user.mfaEnabled && (!mfaToken || !(await identityService.verifyMfa(user.id, mfaToken)))) throw new Error('MFA required')
 
       const payload: { userId: string; role?: string; companyId?: string } = { userId: user.id }
       if (user.role) payload.role = user.role

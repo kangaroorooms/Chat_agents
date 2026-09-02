@@ -1,4 +1,4 @@
-import { prisma } from '../../../config/prisma'
+import { prisma } from '../../config/prisma'
 import type { AuditAction } from '@prisma/client'
 
 export class AuditLogService {
@@ -6,7 +6,7 @@ export class AuditLogService {
    * Log an audit event
    */
   async log(
-    companyId: string,
+    companyId: string | null | undefined,
     action: AuditAction,
     resourceType: string,
     resourceId: string,

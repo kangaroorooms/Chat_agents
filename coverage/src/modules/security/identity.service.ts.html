@@ -1,0 +1,190 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/modules/security/identity.service.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/modules/security</a> identity.service.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">3.44% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>3/87</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/56</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/24</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">13.63% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>3/22</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import crypto from 'crypto'
+import { generateSecret, generateURI, verify } from 'otplib'
+import { SAML } from '@node-saml/node-saml'
+import { prisma } from '../../config/prisma'
+import TokenService from '../auth/token.service'
+import { auditLogService } from '../audit/audit.service'
+&nbsp;
+type Provider = 'OKTA' | 'AZURE_AD' | 'GOOGLE_WORKSPACE'
+type PolicyInput = { minPasswordLength?: number; requireUppercase?: boolean; requireLowercase?: boolean; requireNumber?: boolean; requireSymbol?: boolean; sessionTimeoutMinutes?: number; allowedEmailDomains?: string[]; ipAllowlist?: string[] }
+&nbsp;
+const <span class="fstat-no" title="function not covered" >encryptionKey = () =&gt; <span class="cstat-no" title="statement not covered" >c</span>rypto.createHash('sha256').update(process.env.MFA_ENCRYPTION_KEY || process.env.JWT_SECRET || 'invalid').digest()</span>
+function <span class="fstat-no" title="function not covered" >encrypt(v</span>alue: string): string { const iv = <span class="cstat-no" title="statement not covered" >crypto.randomBytes(12); c</span>onst cipher = <span class="cstat-no" title="statement not covered" >crypto.createCipheriv('aes-256-gcm', encryptionKey(), iv); c</span>onst encrypted = <span class="cstat-no" title="statement not covered" >Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]); <span class="cstat-no" title="statement not covered" >r</span>eturn `${iv.toString('base64')}.${cipher.getAuthTag().toString('base64')}.${encrypted.toString('base64')}` }</span>
+function <span class="fstat-no" title="function not covered" >decrypt(v</span>alue: string): string { const [iv, tag, encrypted] = <span class="cstat-no" title="statement not covered" >value.split('.'); c</span>onst decipher = <span class="cstat-no" title="statement not covered" >crypto.createDecipheriv('aes-256-gcm', encryptionKey(), Buffer.from(iv, 'base64')); <span class="cstat-no" title="statement not covered" >d</span>ecipher.setAuthTag(Buffer.from(tag, 'base64')); <span class="cstat-no" title="statement not covered" >r</span>eturn Buffer.concat([decipher.update(Buffer.from(encrypted, 'base64')), decipher.final()]).toString('utf8') }</span>
+const <span class="fstat-no" title="function not covered" >hash = (v</span>alue: string) =&gt; <span class="cstat-no" title="statement not covered" >crypto.createHash('sha256').update(value).digest('hex')</span>
+&nbsp;
+export class IdentityService {
+  async <span class="fstat-no" title="function not covered" >getPolicy(c</span>ompanyId: string) { <span class="cstat-no" title="statement not covered" >return (prisma as any).companySecurityPolicy.upsert({ where: { companyId }, update: {}, create: { companyId, allowedEmailDomains: [], ipAllowlist: [] } }) }</span>
+  async <span class="fstat-no" title="function not covered" >updatePolicy(c</span>ompanyId: string, input: PolicyInput, actorId?: string) { const policy = <span class="cstat-no" title="statement not covered" >await (prisma as any).companySecurityPolicy.upsert({ where: { companyId }, update: input, create: { companyId, allowedEmailDomains: [], ipAllowlist: [], ...input } }); <span class="cstat-no" title="statement not covered" >a</span>wait auditLogService.log(companyId, 'SECURITY_POLICY_CHANGED' as any, 'security_policy', policy.id, actorId, input); <span class="cstat-no" title="statement not covered" >r</span>eturn policy }</span>
+  async <span class="fstat-no" title="function not covered" >enforcePolicy(c</span>ompanyId: string, ip?: string) { const policy = <span class="cstat-no" title="statement not covered" >await (prisma as any).companySecurityPolicy.findUnique({ where: { companyId } }); <span class="cstat-no" title="statement not covered" >i</span>f (policy?.ipAllowlist?.length &amp;&amp; (!ip || !policy.ipAllowlist.includes(ip))) <span class="cstat-no" title="statement not covered" >throw new Error('IP address is not allowed') }</span></span>
+  async <span class="fstat-no" title="function not covered" >validateCredentials(c</span>ompanyId: string, email?: string, password?: string) { const policy = <span class="cstat-no" title="statement not covered" >await this.getPolicy(companyId); <span class="cstat-no" title="statement not covered" >i</span>f (email &amp;&amp; policy.allowedEmailDomains.length &amp;&amp; !policy.allowedEmailDomains.<span class="fstat-no" title="function not covered" >some((d</span>omain: string) =&gt; <span class="cstat-no" title="statement not covered" >email.toLowerCase().endsWith(`@${domain.toLowerCase()}`))</span>) <span class="cstat-no" title="statement not covered" >throw new Error('Email domain is not allowed'); <span class="cstat-no" title="statement not covered" >i</span></span>f (password &amp;&amp; (password.length &lt; policy.minPasswordLength || (policy.requireUppercase &amp;&amp; !/[A-Z]/.test(password)) || (policy.requireLowercase &amp;&amp; !/[a-z]/.test(password)) || (policy.requireNumber &amp;&amp; !/[0-9]/.test(password)) || (policy.requireSymbol &amp;&amp; !/[^A-Za-z0-9]/.test(password)))) <span class="cstat-no" title="statement not covered" >throw new Error('Password does not meet company policy') }</span></span>
+  async <span class="fstat-no" title="function not covered" >beginMfa(u</span>serId: string) { const secret = <span class="cstat-no" title="statement not covered" >generateSecret()</span>; const recoveryCodes = <span class="cstat-no" title="statement not covered" >Array.from({ length: 10 <span class="fstat-no" title="function not covered" >}, () =&gt; <span class="cstat-no" title="statement not covered" >c</span>rypto.randomBytes(8).toString('hex'))</span>; <span class="cstat-no" title="statement not covered" >a</span>wait (prisma as any).user.update({ where: { id: userId }, data: { mfaSecret: encrypt(secret), recoveryCodes: recoveryCodes.map(hash), mfaEnabled: false } }); <span class="cstat-no" title="statement not covered" >r</span>eturn { secret, otpAuthUri: generateURI({ issuer: 'Chatbot App', label: userId, secret }), recoveryCodes } }</span>
+  async <span class="fstat-no" title="function not covered" >enableMfa(u</span>serId: string, token: string) { const user = <span class="cstat-no" title="statement not covered" >await (prisma as any).user.findUnique({ where: { id: userId } }); <span class="cstat-no" title="statement not covered" >i</span>f (!user?.mfaSecret || !(await verify({ secret: decrypt(user.mfaSecret), token, epochTolerance: 1 }))) <span class="cstat-no" title="statement not covered" >throw new Error('Invalid MFA code'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn (prisma as any).user.update({ where: { id: userId }, data: { mfaEnabled: true }, select: { id: true, mfaEnabled: true } }) }</span>
+  async <span class="fstat-no" title="function not covered" >verifyMfa(u</span>serId: string, token: string) { const user = <span class="cstat-no" title="statement not covered" >await (prisma as any).user.findUnique({ where: { id: userId } }); <span class="cstat-no" title="statement not covered" >i</span>f (!user?.mfaEnabled || !user.mfaSecret) <span class="cstat-no" title="statement not covered" >return true; <span class="cstat-no" title="statement not covered" >i</span></span>f (await verify({ secret: decrypt(user.mfaSecret), token, epochTolerance: 1 })) <span class="cstat-no" title="statement not covered" >return true; c</span></span>onst codes = <span class="cstat-no" title="statement not covered" >Array.isArray(user.recoveryCodes) ? user.recoveryCodes as string[] : []; c</span>onst tokenHash = <span class="cstat-no" title="statement not covered" >hash(token); c</span>onst index = <span class="cstat-no" title="statement not covered" >codes.<span class="fstat-no" title="function not covered" >findIndex((c</span>ode) =&gt; <span class="cstat-no" title="statement not covered" >crypto.timingSafeEqual(Buffer.from(code), Buffer.from(tokenHash)))</span>; <span class="cstat-no" title="statement not covered" >i</span>f (index &lt; 0) <span class="cstat-no" title="statement not covered" >return false; <span class="cstat-no" title="statement not covered" >c</span></span>odes.splice(index, 1); <span class="cstat-no" title="statement not covered" >a</span>wait (prisma as any).user.update({ where: { id: userId }, data: { recoveryCodes: codes } }); <span class="cstat-no" title="statement not covered" >r</span>eturn true }</span>
+  async <span class="fstat-no" title="function not covered" >disableMfa(u</span>serId: string, token: string) { <span class="cstat-no" title="statement not covered" >if (!(await this.verifyMfa(userId, token))) <span class="cstat-no" title="statement not covered" >throw new Error('Invalid MFA code'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn (prisma as any).user.update({ where: { id: userId }, data: { mfaEnabled: false, mfaSecret: null, recoveryCodes: null }, select: { id: true, mfaEnabled: true } }) }</span>
+  async <span class="fstat-no" title="function not covered" >sessions(u</span>serId: string) { <span class="cstat-no" title="statement not covered" >return (prisma as any).refreshToken.findMany({ where: { userId, isRevoked: false, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' }, select: { id: true, deviceId: true, deviceName: true, ipAddress: true, userAgent: true, createdAt: true, lastUsedAt: true, expiresAt: true } }) }</span>
+  async <span class="fstat-no" title="function not covered" >companySessions(c</span>ompanyId: string) { <span class="cstat-no" title="statement not covered" >return (prisma as any).refreshToken.findMany({ where: { user: { companyId }, isRevoked: false, expiresAt: { gt: new Date() } }, orderBy: { createdAt: 'desc' }, select: { id: true, userId: true, deviceId: true, deviceName: true, ipAddress: true, userAgent: true, createdAt: true, lastUsedAt: true, expiresAt: true } }) }</span>
+  async <span class="fstat-no" title="function not covered" >revokeSession(u</span>serId: string, sessionId: string) { const session = <span class="cstat-no" title="statement not covered" >await (prisma as any).refreshToken.findFirst({ where: { id: sessionId, userId } }); <span class="cstat-no" title="statement not covered" >i</span>f (!session) <span class="cstat-no" title="statement not covered" >throw new Error('Session not found'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn (prisma as any).refreshToken.update({ where: { id: sessionId }, data: { isRevoked: true, revokedAt: new Date() } }) }</span>
+  async <span class="fstat-no" title="function not covered" >revokeAllSessions(u</span>serId: string) { <span class="cstat-no" title="statement not covered" >return (prisma as any).refreshToken.updateMany({ where: { userId, isRevoked: false }, data: { isRevoked: true, revokedAt: new Date() } }) }</span>
+  async <span class="fstat-no" title="function not covered" >revokeAllCompanyUserSessions(c</span>ompanyId: string, userId: string) { const user = <span class="cstat-no" title="statement not covered" >await (prisma as any).user.findFirst({ where: { id: userId, companyId } }); <span class="cstat-no" title="statement not covered" >i</span>f (!user) <span class="cstat-no" title="statement not covered" >throw new Error('User not found'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn this.revokeAllSessions(userId) }</span>
+  async <span class="fstat-no" title="function not covered" >configureSso(c</span>ompanyId: string, provider: Provider, input: { entityId: string; ssoUrl: string; certificate: string }, actorId?: string) { const result = <span class="cstat-no" title="statement not covered" >await (prisma as any).ssoConnection.upsert({ where: { companyId_provider: { companyId, provider } }, update: input, create: { companyId, provider, ...input } }); <span class="cstat-no" title="statement not covered" >a</span>wait auditLogService.log(companyId, 'SSO_CONFIGURED' as any, 'sso_connection', result.id, actorId, { provider }); <span class="cstat-no" title="statement not covered" >r</span>eturn result }</span>
+  async <span class="fstat-no" title="function not covered" >createScimToken(c</span>ompanyId: string, actorId?: string) { const raw = <span class="cstat-no" title="statement not covered" >`scim_${crypto.randomBytes(32).toString('hex')}`; c</span>onst record = <span class="cstat-no" title="statement not covered" >await (prisma as any).scimToken.create({ data: { companyId, tokenHash: hash(raw) } }); <span class="cstat-no" title="statement not covered" >a</span>wait auditLogService.log(companyId, 'SCIM_TOKEN_CREATED' as any, 'scim_token', record.id, actorId); <span class="cstat-no" title="statement not covered" >r</span>eturn { id: record.id, token: raw, createdAt: record.createdAt } }</span>
+  async <span class="fstat-no" title="function not covered" >ssoLogin(c</span>ompanyId: string, provider: Provider, callbackUrl: string) { const config = <span class="cstat-no" title="statement not covered" >await (prisma as any).ssoConnection.findFirst({ where: { companyId, provider, enabled: true } }); <span class="cstat-no" title="statement not covered" >i</span>f (!config) <span class="cstat-no" title="statement not covered" >throw new Error('SSO provider is not configured'); c</span></span>onst saml = <span class="cstat-no" title="statement not covered" >new SAML({ callbackUrl, entryPoint: config.ssoUrl, issuer: config.entityId, idpCert: config.certificate, wantAssertionsSigned: true, wantAuthnResponseSigned: true }); <span class="cstat-no" title="statement not covered" >r</span>eturn saml.getAuthorizeUrlAsync('', callbackUrl, {}) }</span>
+  async <span class="fstat-no" title="function not covered" >ssoCallback(c</span>ompanyId: string, provider: Provider, callbackUrl: string, body: Record&lt;string, string&gt;) { const config = <span class="cstat-no" title="statement not covered" >await (prisma as any).ssoConnection.findFirst({ where: { companyId, provider, enabled: true } }); <span class="cstat-no" title="statement not covered" >i</span>f (!config) <span class="cstat-no" title="statement not covered" >throw new Error('SSO provider is not configured'); c</span></span>onst saml = <span class="cstat-no" title="statement not covered" >new SAML({ callbackUrl, entryPoint: config.ssoUrl, issuer: config.entityId, idpCert: config.certificate, wantAssertionsSigned: true, wantAuthnResponseSigned: true }); c</span>onst result = <span class="cstat-no" title="statement not covered" >await saml.validatePostResponseAsync(body); c</span>onst email = <span class="cstat-no" title="statement not covered" >String(result.profile?.email || result.profile?.['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || '').toLowerCase(); <span class="cstat-no" title="statement not covered" >i</span>f (!email) <span class="cstat-no" title="statement not covered" >throw new Error('SAML assertion has no email'); c</span></span>onst user = <span class="cstat-no" title="statement not covered" >await (prisma as any).user.findFirst({ where: { companyId, email, isActive: true } }); <span class="cstat-no" title="statement not covered" >i</span>f (!user) <span class="cstat-no" title="statement not covered" >throw new Error('SSO user is not provisioned'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn { token: TokenService.sign({ userId: user.id, role: user.role, companyId }) } }</span>
+}
+export const identityService = new IdentityService()
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-01T12:09:53.306Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

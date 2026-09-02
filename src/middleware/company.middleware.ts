@@ -13,7 +13,7 @@ export const requireCompanyContext = async (req: Request, res: Response, next: N
   const userId = req.userId
   if (!userId) return res.status(403).json({ success: false, message: 'Company context required' })
 
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { companyId: true } })
+  const user = await prisma.user.findFirst({ where: { id: userId }, select: { companyId: true } })
   if (!user || !user.companyId) return res.status(403).json({ success: false, message: 'Company context required' })
 
   req.companyId = user.companyId

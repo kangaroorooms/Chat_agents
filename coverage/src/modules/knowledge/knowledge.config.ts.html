@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">55.55% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>18/18</span>
+                <span class='fraction'>10/18</span>
             </div>
         
             
@@ -129,31 +129,31 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -181,19 +181,19 @@ export interface KnowledgeConfig {
 &nbsp;
 export function loadKnowledgeConfig(): KnowledgeConfig {
   return {
-    embeddingProvider: process.env.EMBEDDING_PROVIDER || 'openai',
-    embeddingModel: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
+    embeddingProvider: process.env.EMBEDDING_PROVIDER || <span class="branch-1 cbranch-no" title="branch not covered" >'openai',</span>
+    embeddingModel: process.env.EMBEDDING_MODEL || <span class="branch-1 cbranch-no" title="branch not covered" >'text-embedding-3-small',</span>
     embeddingDimensions: parseInt(
-      process.env.EMBEDDING_DIMENSIONS || '1536',
+      process.env.EMBEDDING_DIMENSIONS || <span class="branch-1 cbranch-no" title="branch not covered" >'1536',</span>
       10
     ),
-    retrievalTopK: parseInt(process.env.RETRIEVAL_TOP_K || '5', 10),
+    retrievalTopK: parseInt(process.env.RETRIEVAL_TOP_K || <span class="branch-1 cbranch-no" title="branch not covered" >'5', 1</span>0),
     retrievalSimilarityThreshold: parseFloat(
-      process.env.RETRIEVAL_SIMILARITY_THRESHOLD || '0.5'
+      process.env.RETRIEVAL_SIMILARITY_THRESHOLD || <span class="branch-1 cbranch-no" title="branch not covered" >'0.5'</span>
     ),
-    chunkSize: parseInt(process.env.RETRIEVAL_CHUNK_SIZE || '512', 10),
-    chunkOverlap: parseFloat(process.env.RETRIEVAL_CHUNK_OVERLAP || '0.1'),
-    batchSize: parseInt(process.env.KNOWLEDGE_BATCH_SIZE || '10', 10),
+    chunkSize: parseInt(process.env.RETRIEVAL_CHUNK_SIZE || <span class="branch-1 cbranch-no" title="branch not covered" >'512', 1</span>0),
+    chunkOverlap: parseFloat(process.env.RETRIEVAL_CHUNK_OVERLAP || <span class="branch-1 cbranch-no" title="branch not covered" >'0.1')</span>,
+    batchSize: parseInt(process.env.KNOWLEDGE_BATCH_SIZE || <span class="branch-1 cbranch-no" title="branch not covered" >'10', 1</span>0),
     autoIndex: process.env.KNOWLEDGE_AUTO_INDEX === 'true',
   }
 }
@@ -223,7 +223,7 @@ export function getIndexingConfig(): IndexingConfig {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-07-17T12:45:23.043Z
+                at 2026-09-01T12:09:53.306Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

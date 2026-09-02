@@ -5,7 +5,8 @@ import { auditLogService } from '../audit/audit.service'
 
 export const getAISettings = async (req: Request, res: Response) => {
   try {
-    const companyId = String(req.params.companyId)
+    const companyId = req.companyId
+    if (!companyId || String(req.params.companyId) !== companyId) return res.status(403).json({ success: false, message: 'Company access denied' })
     const settings = await aiSettingsService.get(companyId)
     return res.json({ success: true, data: settings })
   } catch (error) {
@@ -18,7 +19,8 @@ export const createAISettings = async (req: Request, res: Response) => {
     const parsed = CreateAISettingsSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid payload', details: parsed.error.format() })
 
-    const companyId = String(req.params.companyId)
+    const companyId = req.companyId
+    if (!companyId || String(req.params.companyId) !== companyId) return res.status(403).json({ success: false, message: 'Company access denied' })
     const settings = await aiSettingsService.create(companyId, parsed.data)
     await auditLogService.log(companyId, 'AI_SETTINGS_CHANGED', 'ai_settings', settings.id, req.userId)
     return res.status(201).json({ success: true, data: settings })
@@ -32,7 +34,8 @@ export const updateAISettings = async (req: Request, res: Response) => {
     const parsed = UpdateAISettingsSchema.safeParse(req.body)
     if (!parsed.success) return res.status(400).json({ success: false, message: 'Invalid payload', details: parsed.error.format() })
 
-    const companyId = String(req.params.companyId)
+    const companyId = req.companyId
+    if (!companyId || String(req.params.companyId) !== companyId) return res.status(403).json({ success: false, message: 'Company access denied' })
     const settings = await aiSettingsService.update(companyId, parsed.data)
     await auditLogService.log(companyId, 'AI_SETTINGS_CHANGED', 'ai_settings', settings.id, req.userId)
     return res.json({ success: true, data: settings })

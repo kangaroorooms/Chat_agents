@@ -9,6 +9,7 @@ export const RegisterSchema = z.object({
 export const LoginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(1, 'Password is required'),
+  mfaToken: z.string().regex(/^\d{6}$|^[a-f0-9]{16}$/i).optional(),
 })
 
 export type RegisterDto = z.infer<typeof RegisterSchema>

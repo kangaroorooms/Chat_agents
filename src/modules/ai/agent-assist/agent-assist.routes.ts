@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { authMiddleware } from '../../../middleware/auth.middleware'
+import { requireCompanyContext } from '../../../middleware/company.middleware'
 import { requireRole } from '../../../middleware/authorize.middleware'
 import {
   generateReplySuggestion,
@@ -20,10 +21,11 @@ const router = Router({ mergeParams: true })
  * POST /conversations/:conversationId/agent-assist/notes
  */
 
-router.post('/reply', authMiddleware, requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateReplySuggestion)
-router.post('/summary', authMiddleware, requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateSummary)
-router.post('/next-action', authMiddleware, requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateNextAction)
-router.post('/tags', authMiddleware, requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateTags)
-router.post('/notes', authMiddleware, requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateNotes)
+router.use(authMiddleware, requireCompanyContext)
+router.post('/reply', requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateReplySuggestion)
+router.post('/summary', requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateSummary)
+router.post('/next-action', requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateNextAction)
+router.post('/tags', requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateTags)
+router.post('/notes', requireRole(['AGENT', 'ADMIN', 'SUPER_ADMIN']), generateNotes)
 
 export default router

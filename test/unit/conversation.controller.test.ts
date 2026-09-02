@@ -10,7 +10,7 @@ describe('ConversationController', () => {
   })
 
   it('returns agent queue for AGENT users', async () => {
-    const req: any = { query: {}, userId: 'agent-1', user: { role: 'AGENT', companyId: 'company-1' } }
+    const req: any = { query: {}, userId: 'agent-1', companyId: 'company-1', user: { role: 'AGENT', companyId: 'company-1' } }
     const json = vi.fn()
     const status = vi.fn(() => ({ json }))
     const res: any = { status }

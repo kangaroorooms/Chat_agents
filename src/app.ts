@@ -2,14 +2,17 @@ import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet'
-import rateLimit from 'express-rate-limit'
 
 import routes from "./routes";
 import { errorHandler } from "./middleware/error.middleware";
 import { requestObservability } from './middleware/observability.middleware'
 import healthRoutes from './modules/health/health.routes'
 import { serveWidgetScript } from './modules/widget/widget.script'
-import { authenticateApiKey } from './middleware/api-key.middleware'
+import { authenticateApiKey, apiKeyScopeGuard } from './middleware/api-key.middleware'
+import { globalLimiter } from './middleware/rate-limit.middleware'
+import { metricsText } from './infrastructure/metrics'
+import swaggerUi from 'swagger-ui-express'
+import { openapiDocument } from './infrastructure/openapi'
 
 const app = express();
 
@@ -30,21 +33,30 @@ const corsOptions = {
 app.use(cors(corsOptions))
 
 // Basic security hardening
-app.use(helmet())
+app.use(helmet({
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  contentSecurityPolicy: { directives: { defaultSrc: ["'self'"], scriptSrc: ["'self'"], objectSrc: ["'none'"], frameAncestors: ["'none'"] } },
+  frameguard: { action: 'deny' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+}))
+app.use((_req, res, next) => {
+  res.setHeader('X-XSS-Protection', '1; mode=block')
+  next()
+})
 
 // Rate limiter to mitigate brute-force and abusive requests
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-})
-app.use(limiter)
+app.use(globalLimiter)
 
 app.use('/api/billing/webhooks', express.raw({ type: 'application/json' }))
+app.use(express.urlencoded({ extended: false }))
 app.use(express.json({ limit: '1mb' }));
 app.use(requestObservability)
 app.use(authenticateApiKey)
+app.use(apiKeyScopeGuard)
 app.use('/health', healthRoutes)
 app.get('/widget.js', serveWidgetScript)
+app.get('/metrics', async (_req, res) => { res.setHeader('Content-Type', 'text/plain; version=0.0.4'); res.send(await metricsText()) })
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiDocument))
 
 // parse cookies for refresh token handling
 app.use(cookieParser());

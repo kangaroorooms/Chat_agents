@@ -6,18 +6,18 @@ import { usageService } from '../billing/usage.service'
 const db = prisma
 
 export class MessageService {
-  async createMessage(currentUserId: string, payload: { conversationId: string; content?: string; type?: MessageType; metadata?: any; replyToId?: string }) {
+  async createMessage(currentUserId: string, payload: { conversationId: string; content?: string; type?: MessageType; metadata?: any; replyToId?: string }, companyId?: string) {
     const { conversationId, content, type = 'TEXT', metadata, replyToId } = payload
 
     // ensure conversation exists and user is participant
-    const conv = await db.conversation.findFirst({ where: { id: conversationId, isDeleted: false, participants: { some: { userId: currentUserId } } } })
+    const conv = await db.conversation.findFirst({ where: { id: conversationId, ...(companyId ? { companyId } : {}), isDeleted: false, participants: { some: { userId: currentUserId } } } })
     if (!conv) throw new Error('Conversation not found')
     if (conv.state === 'CLOSED' || conv.state === 'ARCHIVED') {
       throw new Error('Cannot add messages to closed or archived conversations')
     }
 
     if (replyToId) {
-      const reply = await db.message.findUnique({ where: { id: replyToId } })
+      const reply = await db.message.findFirst({ where: { id: replyToId, ...(companyId ? { companyId } : {}) } })
       if (!reply || reply.conversationId !== conversationId) throw new Error('Invalid reply target')
     }
 
@@ -52,14 +52,14 @@ export class MessageService {
       return createdMessage
     })
 
-    void emailService.sendReply(conversationId, message.content).catch((error) => console.error('Email reply delivery failed', error))
+    void emailService.enqueueReply(conversationId, message.content).catch((error) => console.error('Email reply delivery failed', error))
     if (conv.companyId) void usageService.record(conv.companyId, 'messages', 1, { conversationId, messageId: message.id }).catch((error) => console.error('Usage write failed', error))
     return message
   }
 
-  async listMessages(userId: string, conversationId: string, opts: { limit?: number; cursor?: string } = {}) {
+  async listMessages(userId: string, conversationId: string, opts: { limit?: number; cursor?: string } = {}, companyId?: string) {
     const take = opts.limit || 50
-    const where = { conversationId, isDeleted: false }
+    const where = { conversationId, ...(companyId ? { companyId } : {}), isDeleted: false }
 
     const findArgs: any = {
       where,
@@ -81,8 +81,8 @@ export class MessageService {
     return { items, pagination: { nextCursor, pageSize: take, total } }
   }
 
-  async getMessageById(userId: string, messageId: string) {
-    const message = await db.message.findUnique({ where: { id: messageId }, include: { sender: true, edits: true } })
+  async getMessageById(userId: string, messageId: string, companyId?: string) {
+    const message = await db.message.findFirst({ where: { id: messageId, ...(companyId ? { companyId } : {}) }, include: { sender: true, edits: true } })
     if (!message) throw new Error('Message not found')
     // ensure user is participant of the conversation
     const conv = await db.conversation.findFirst({ where: { id: message.conversationId, participants: { some: { userId } } } })
@@ -90,11 +90,11 @@ export class MessageService {
     return message
   }
 
-  async editMessage(userId: string, messageId: string, content: string, metadata?: any) {
-    const message = await db.message.findUnique({ where: { id: messageId } })
+  async editMessage(userId: string, messageId: string, content: string, metadata?: any, companyId?: string) {
+    const message = await db.message.findFirst({ where: { id: messageId, ...(companyId ? { companyId } : {}) } })
     if (!message) throw new Error('Message not found')
 
-    const conv = await db.conversation.findUnique({ where: { id: message.conversationId } })
+    const conv = await db.conversation.findFirst({ where: { id: message.conversationId, ...(companyId ? { companyId } : {}) } })
     if (!conv) throw new Error('Conversation not found')
 
     if (message.senderId !== userId && conv.ownerId !== userId) throw new Error('Forbidden')
@@ -107,11 +107,11 @@ export class MessageService {
     return updated
   }
 
-  async deleteMessage(userId: string, messageId: string) {
-    const message = await db.message.findUnique({ where: { id: messageId } })
+  async deleteMessage(userId: string, messageId: string, companyId?: string) {
+    const message = await db.message.findFirst({ where: { id: messageId, ...(companyId ? { companyId } : {}) } })
     if (!message) throw new Error('Message not found')
 
-    const conv = await db.conversation.findUnique({ where: { id: message.conversationId } })
+    const conv = await db.conversation.findFirst({ where: { id: message.conversationId, ...(companyId ? { companyId } : {}) } })
     if (!conv) throw new Error('Conversation not found')
 
     if (message.senderId !== userId && conv.ownerId !== userId) throw new Error('Forbidden')

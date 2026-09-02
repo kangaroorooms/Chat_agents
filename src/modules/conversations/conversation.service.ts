@@ -7,7 +7,7 @@ import type { ConversationState } from '@prisma/client'
 const db = prisma
 
 export class ConversationService {
-  private async resolveParticipant(participantId: string) {
+  private async resolveParticipant(participantId: string, companyId?: string) {
     const trimmed = participantId.trim()
     if (!trimmed) return null
 
@@ -15,6 +15,7 @@ export class ConversationService {
       return prisma.user.findUnique({
         where: {
           id: trimmed,
+          ...(companyId ? { companyId } : {}),
         },
       })
     }
@@ -22,15 +23,17 @@ export class ConversationService {
     return prisma.user.findUnique({
       where: {
         email: trimmed,
+        ...(companyId ? { companyId } : {}),
       },
     })
   }
 
   async createConversation(
     currentUserId: string,
-    participantId: string
+    participantId: string,
+    companyId?: string
   ) {
-    const participant = await this.resolveParticipant(participantId)
+    const participant = await this.resolveParticipant(participantId, companyId)
 
     if (!participant) {
       throw new Error("Participant not found");
@@ -82,6 +85,7 @@ if (
     const conversation =
       await db.conversation.create({
         data: {
+          companyId,
           participants: {
             create: [
               {
@@ -101,9 +105,10 @@ if (
     return conversation;
   }
 
-  async getConversations(currentUserId: string) {
+  async getConversations(currentUserId: string, companyId?: string) {
     return db.conversation.findMany({
       where: {
+        ...(companyId ? { companyId } : {}),
         participants: {
           some: {
             userId: currentUserId,
@@ -132,12 +137,14 @@ if (
   
   async deleteConversation(
     userId: string,
-    conversationId: string
+    conversationId: string,
+    companyId?: string
   ) {
     const conversation =
       await db.conversation.findFirst({
         where: {
           id: conversationId,
+          ...(companyId ? { companyId } : {}),
           participants: {
             some: {
               userId,
@@ -165,13 +172,14 @@ if (
 
   async listConversations(
     userId: string,
-    opts: { limit?: number; cursor?: string; search?: string; state?: string } = {}
+    opts: { limit?: number; cursor?: string; search?: string; state?: string; companyId?: string } = {}
   ) {
     const limit = opts.limit || 20
 
     const where: any = {
       isDeleted: false,
       participants: { some: { userId } },
+      ...(opts.companyId ? { companyId: opts.companyId } : {}),
     }
 
     if (opts.state) where.state = opts.state
@@ -317,13 +325,13 @@ if (
     return updated
   }
 
-  async addParticipant(userId: string, conversationId: string, participantId: string) {
+  async addParticipant(userId: string, conversationId: string, participantId: string, companyId?: string) {
     // ensure requester is participant
     const conv = await db.conversation.findFirst({ where: { id: conversationId, participants: { some: { userId } } } })
     if (!conv) throw new Error('Conversation not found')
 
     // check participant exists
-    const user = await db.user.findUnique({ where: { id: participantId } })
+    const user = await db.user.findFirst({ where: { id: participantId, ...(companyId ? { companyId } : {}) } })
     if (!user) throw new Error('Participant user not found')
 
     // create relation if not exists
@@ -336,7 +344,7 @@ if (
     return { success: true }
   }
 
-  async removeParticipant(userId: string, conversationId: string, participantId: string) {
+  async removeParticipant(userId: string, conversationId: string, participantId: string, companyId?: string) {
     // ensure requester is participant
     const conv = await db.conversation.findFirst({ where: { id: conversationId, participants: { some: { userId } } } })
     if (!conv) throw new Error('Conversation not found')
@@ -345,11 +353,11 @@ if (
     return { success: true }
   }
 
-  async assignOwner(userId: string, conversationId: string, ownerId: string) {
-    const conv = await db.conversation.findFirst({ where: { id: conversationId, participants: { some: { userId } } } })
+  async assignOwner(userId: string, conversationId: string, ownerId: string, companyId?: string) {
+    const conv = await db.conversation.findFirst({ where: { id: conversationId, ...(companyId ? { companyId } : {}), participants: { some: { userId } } } })
     if (!conv) throw new Error('Conversation not found')
 
-    const target = await db.user.findUnique({ where: { id: ownerId } })
+    const target = await db.user.findFirst({ where: { id: ownerId, ...(companyId ? { companyId } : {}) } })
     if (!target) throw new Error('Target agent not found')
     if (!['AGENT', 'ADMIN', 'SUPER_ADMIN'].includes(target.role)) throw new Error('Target user is not an agent')
 

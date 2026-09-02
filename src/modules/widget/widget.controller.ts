@@ -5,7 +5,7 @@ export const startConversation = async (req: Request, res: Response) => {
   try {
     const { companyId, visitorName, visitorEmail } = req.body
     
-    if (!companyId) {
+    if (!companyId || companyId !== req.companyId) {
       return res.status(400).json({ success: false, message: 'companyId is required' })
     }
 
@@ -47,7 +47,7 @@ export const sendMessage = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'conversationId and message are required' })
     }
 
-    const result = await widgetService.sendMessage(conversationId, message, 'visitor')
+    const result = await widgetService.sendMessage(conversationId, message, 'visitor', req.companyId!)
 
     return res.status(201).json({
       success: true,
@@ -64,14 +64,14 @@ export const sendMessage = async (req: Request, res: Response) => {
 
 export const getMessages = async (req: Request, res: Response) => {
   try {
-    const { conversationId } = req.params
+    const conversationId = Array.isArray(req.params.conversationId) ? req.params.conversationId[0] : req.params.conversationId
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100)
 
     if (!conversationId) {
       return res.status(400).json({ success: false, message: 'conversationId is required' })
     }
 
-    const messages = await widgetService.getMessages(conversationId, limit)
+    const messages = await widgetService.getMessages(conversationId, limit, req.companyId!)
 
     return res.json({
       success: true,

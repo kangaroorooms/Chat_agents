@@ -8,6 +8,8 @@ import { billingService } from '../billing/billing.service'
 import { slaService } from '../sla/sla.service'
 import { apiKeyService } from '../security/api-key.service'
 import { webhookService } from '../webhooks/webhook.service'
+import { enqueue } from '../../infrastructure/queues'
+import { auditLogService } from '../audit/audit.service'
 
 const router = Router()
 const secured = [authMiddleware, requireCompanyContext, requireRole(['ADMIN', 'SUPER_ADMIN'])]
@@ -22,7 +24,7 @@ router.put('/billing/subscription', ...secured, async (req, res) => {
 
 router.put('/sla/policy', ...secured, async (req, res) => { const b = z.object({ firstResponseMinutes: z.number().int().positive(), resolutionMinutes: z.number().int().positive() }).parse(req.body); res.json({ success: true, data: await slaService.setPolicy(req.companyId!, b.firstResponseMinutes, b.resolutionMinutes) }) })
 router.get('/sla/metrics', ...secured, async (req, res) => res.json({ success: true, data: await slaService.getMetrics(req.companyId!) }))
-router.post('/sla/check-breaches', ...secured, async (req, res) => res.json({ success: true, data: { breached: await slaService.checkBreaches(req.companyId!) } }))
+router.post('/sla/check-breaches', ...secured, async (req, res) => { const jobId = await enqueue({ queue: 'sla', name: 'check-breaches', data: { companyId: req.companyId! } }); if (!jobId) return res.json({ success: true, data: { breached: await slaService.checkBreaches(req.companyId!) } }); return res.status(202).json({ success: true, data: { jobId } }) })
 
 router.get('/analytics/agents', ...secured, async (req, res) => {
   const agents = await prisma.user.findMany({ where: { companyId: req.companyId, role: 'AGENT' }, select: { id: true, username: true, email: true, _count: { select: { ownedConversations: true } } } })
@@ -34,11 +36,13 @@ router.get('/analytics/agents', ...secured, async (req, res) => {
   res.json({ success: true, data })
 })
 
-router.post('/api-keys', ...secured, async (req, res) => { const { name } = z.object({ name: z.string().trim().min(1).max(80) }).parse(req.body); res.status(201).json({ success: true, data: await apiKeyService.createKey(req.companyId!, name) }) })
+router.post('/api-keys', ...secured, async (req, res) => { const b = z.object({ name: z.string().trim().min(1).max(80), scopes: z.array(z.string().min(1).max(80)).default([]), expiresAt: z.coerce.date().optional() }).parse(req.body); res.status(201).json({ success: true, data: await apiKeyService.createKey(req.companyId!, b.name, b.scopes, b.expiresAt) }) })
 router.get('/api-keys', ...secured, async (req, res) => res.json({ success: true, data: await apiKeyService.listKeys(req.companyId!) }))
-router.delete('/api-keys/:id', ...secured, async (req, res) => { const key = await prisma.companyApiKey.findFirst({ where: { id: String(req.params.id), companyId: req.companyId } }); if (!key) return res.status(404).json({ success: false, message: 'API key not found' }); await apiKeyService.revokeKey(key.id); res.status(204).send() })
+router.delete('/api-keys/:id', ...secured, async (req, res) => { const key = await prisma.companyApiKey.findFirst({ where: { id: String(req.params.id), companyId: req.companyId } }); if (!key) return res.status(404).json({ success: false, message: 'API key not found' }); await apiKeyService.revokeKey(key.id); await auditLogService.log(req.companyId, 'API_KEY_DELETED' as any, 'api_key', key.id, req.userId); res.status(204).send() })
+router.post('/api-keys/:id/rotate', ...secured, async (req, res) => { const b = z.object({ name: z.string().trim().min(1).max(80), scopes: z.array(z.string().min(1).max(80)).default([]), expiresAt: z.coerce.date().optional() }).parse(req.body); res.status(201).json({ success: true, data: await apiKeyService.rotateKey(req.companyId!, String(req.params.id), b.name, b.scopes, b.expiresAt) }) })
 
 router.post('/webhooks', ...secured, async (req, res) => { const b = z.object({ url: z.string().url(), events: z.array(z.enum(['CONVERSATION_CREATED', 'CONVERSATION_ASSIGNED', 'CONVERSATION_RESOLVED', 'MESSAGE_CREATED', 'AI_REPLY_GENERATED'])).min(1) }).parse(req.body); res.status(201).json({ success: true, data: await webhookService.create(req.companyId!, b.url, b.events) }) })
 router.get('/webhooks', ...secured, async (req, res) => res.json({ success: true, data: await webhookService.getWebhooks(req.companyId!) }))
-router.delete('/webhooks/:id', ...secured, async (req, res) => { const hook = await prisma.webhook.findFirst({ where: { id: String(req.params.id), companyId: req.companyId } }); if (!hook) return res.status(404).json({ success: false, message: 'Webhook not found' }); await webhookService.delete(hook.id); res.status(204).send() })
+router.delete('/webhooks/:id', ...secured, async (req, res) => { const hook = await prisma.webhook.findFirst({ where: { id: String(req.params.id), companyId: req.companyId } }); if (!hook) return res.status(404).json({ success: false, message: 'Webhook not found' }); await webhookService.delete(hook.id, req.companyId!); res.status(204).send() })
+router.post('/webhooks/deliveries/:id/replay', ...secured, async (req, res) => { const jobId = await webhookService.replayDelivery(req.companyId!, String(req.params.id)); if (!jobId) return res.status(503).json({ success: false, message: 'Redis queue is unavailable' }); res.status(202).json({ success: true, data: { jobId } }) })
 export default router

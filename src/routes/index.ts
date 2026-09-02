@@ -13,6 +13,8 @@ import enterpriseRoutes from '../modules/enterprise/enterprise.routes'
 import healthRoutes from '../modules/health/health.routes'
 import emailRoutes from '../modules/email/email.routes'
 import billingRoutes from '../modules/billing/billing.routes'
+import identityRoutes from '../modules/security/identity.routes'
+import agentAssistRoutes from '../modules/ai/agent-assist/agent-assist.routes'
 
 const router = Router()
 
@@ -20,12 +22,14 @@ router.use('/auth', authRoutes)
 router.use('/users', userRoutes)
 router.use('/companies', companyRoutes)
 router.use('/conversations', conversationRoutes)
+router.use('/conversations/:conversationId/agent-assist', agentAssistRoutes)
 router.use('/messages', messageRoutes)
 router.use('/ai', aiRoutes)
 router.use('/knowledge', knowledgeRoutes)
 router.use('/widget', widgetRoutes)
 router.use('/audit-logs', auditRoutes)
 router.use('/billing', billingRoutes)
+router.use('/identity', identityRoutes)
 router.use('/', enterpriseRoutes)
 router.use('/health', healthRoutes)
 router.use('/email', emailRoutes)

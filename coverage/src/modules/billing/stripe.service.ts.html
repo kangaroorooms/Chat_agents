@@ -1,0 +1,199 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/modules/billing/stripe.service.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../index.html">All files</a> / <a href="index.html">src/modules/billing</a> stripe.service.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">23.21% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>13/56</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">17.54% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>10/57</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">22.22% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/9</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">31.81% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>7/22</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import crypto from 'crypto'
+import { prisma } from '../../config/prisma'
+&nbsp;
+type StripeEvent = { id: string; type: string; data: { object: any } }
+const stripeBase = 'https://api.stripe.com/v1'
+export class StripeBillingService {
+<span class="fstat-no" title="function not covered" >  private k</span>ey() { const key = <span class="cstat-no" title="statement not covered" >process.env.STRIPE_SECRET_KEY; <span class="cstat-no" title="statement not covered" >i</span>f (!key) <span class="cstat-no" title="statement not covered" >throw new Error('Stripe is not configured'); <span class="cstat-no" title="statement not covered" >r</span></span>eturn key }</span>
+  private async <span class="fstat-no" title="function not covered" >request(p</span>ath: string, params: Record&lt;string, string&gt;) { const response = <span class="cstat-no" title="statement not covered" >await fetch(`${stripeBase}${path}`, { method: 'POST', headers: { authorization: `Bearer ${this.key()}`, 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(params) }); <span class="cstat-no" title="statement not covered" >i</span>f (!response.ok) <span class="cstat-no" title="statement not covered" >throw new Error(`Stripe request failed (${response.status})`); <span class="cstat-no" title="statement not covered" >r</span></span>eturn response.json() as Promise&lt;any&gt; }</span>
+  async <span class="fstat-no" title="function not covered" >customer(c</span>ompanyId: string) {
+    const existing = <span class="cstat-no" title="statement not covered" >await prisma.billingCustomer.findUnique({ where: { companyId } }); <span class="cstat-no" title="statement not covered" >i</span>f (existing) <span class="cstat-no" title="statement not covered" >return existing</span></span>
+    const company = <span class="cstat-no" title="statement not covered" >await prisma.company.findUnique({ where: { id: companyId } }); <span class="cstat-no" title="statement not covered" >i</span>f (!company) <span class="cstat-no" title="statement not covered" >throw new Error('Company not found')</span></span>
+    const created = <span class="cstat-no" title="statement not covered" >await this.request('/customers', { name: company.name, 'metadata[companyId]': companyId })</span>
+<span class="cstat-no" title="statement not covered" >    return prisma.billingCustomer.create({ data: { companyId, stripeCustomerId: created.id } })</span>
+  }
+  async <span class="fstat-no" title="function not covered" >checkout(c</span>ompanyId: string, planId: string, successUrl: string, cancelUrl: string) {
+    const [customer, plan] = <span class="cstat-no" title="statement not covered" >await Promise.all([this.customer(companyId), prisma.subscriptionPlan.findUnique({ where: { id: planId } })]); <span class="cstat-no" title="statement not covered" >i</span>f (!plan?.stripePriceId) <span class="cstat-no" title="statement not covered" >throw new Error('Plan is not configured for Stripe')</span></span>
+<span class="cstat-no" title="statement not covered" >    return this.request('/checkout/sessions', { mode: 'subscription', customer: customer.stripeCustomerId, success_url: successUrl, cancel_url: cancelUrl, 'line_items[0][price]': plan.stripePriceId, 'line_items[0][quantity]': '1', 'metadata[companyId]': companyId, 'metadata[planId]': planId })</span>
+  }
+  async <span class="fstat-no" title="function not covered" >portal(c</span>ompanyId: string, returnUrl: string) { const customer = <span class="cstat-no" title="statement not covered" >await this.customer(companyId); <span class="cstat-no" title="statement not covered" >r</span>eturn this.request('/billing_portal/sessions', { customer: customer.stripeCustomerId, return_url: returnUrl }) }</span>
+  verifySignature(raw: Buffer, header?: string) {
+    const secret = process.env.STRIPE_WEBHOOK_SECRET; <span class="missing-if-branch" title="if path not taken" >I</span>if (!secret || !header) <span class="cstat-no" title="statement not covered" >return false</span>
+    const parts = Object.fromEntries(header.split(',').map(part =&gt; { const [key, value] = part.split('='); return [key, value] })); const timestamp = parts.t; const signature = parts.v1
+    if (!timestamp || !signature || Math.abs(Date.now() / 1000 - Number(timestamp)) &gt; 300) return false
+    const expected = crypto.createHmac('sha256', secret).update(`${timestamp}.${raw.toString('utf8')}`).digest('hex')
+    return expected.length === signature.length &amp;&amp; crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+  }
+  async <span class="fstat-no" title="function not covered" >processEvent(e</span>vent: StripeEvent) {
+    const object = <span class="cstat-no" title="statement not covered" >event.data.object; c</span>onst customerId = <span class="cstat-no" title="statement not covered" >object.customer as string | undefined; c</span>onst customer = <span class="cstat-no" title="statement not covered" >customerId ? await prisma.billingCustomer.findUnique({ where: { stripeCustomerId: customerId } }) : null</span>
+    const stored = <span class="cstat-no" title="statement not covered" >await prisma.billingEvent.upsert({ where: { stripeEventId: event.id }, update: {}, create: { stripeEventId: event.id, type: event.type, companyId: customer?.companyId, payload: event as any } }); <span class="cstat-no" title="statement not covered" >i</span>f (stored.processedAt) <span class="cstat-no" title="statement not covered" >return</span></span>
+<span class="cstat-no" title="statement not covered" >    try { <span class="cstat-no" title="statement not covered" >if (customer) <span class="cstat-no" title="statement not covered" >await this.applyEvent(customer.companyId, event); <span class="cstat-no" title="statement not covered" >a</span></span>wait prisma.billingEvent.update({ where: { id: stored.id }, data: { processedAt: new Date() } }) }</span> catch (error) { <span class="cstat-no" title="statement not covered" >await prisma.billingEvent.update({ where: { id: stored.id }, data: { failedAt: new Date(), failureReason: error instanceof Error ? error.message : 'Processing failed' } }); <span class="cstat-no" title="statement not covered" >t</span>hrow error }</span></span>
+  }
+  private async <span class="fstat-no" title="function not covered" >applyEvent(c</span>ompanyId: string, event: StripeEvent) {
+    const object = <span class="cstat-no" title="statement not covered" >event.data.object</span>
+<span class="cstat-no" title="statement not covered" >    if (event.type.startsWith('customer.subscription.')) { const status = (<span class="cstat-no" title="statement not covered" >{ active: 'ACTIVE', trialing: 'TRIALING', past_due: 'PAST_DUE', canceled: 'CANCELED', unpaid: 'UNPAID', incomplete: 'INCOMPLETE' } as Record&lt;string, any&gt;)[object.status] ?? 'INCOMPLETE'; c</span>onst priceId = <span class="cstat-no" title="statement not covered" >object.items?.data?.[0]?.price?.id; <span class="cstat-no" title="statement not covered" >a</span>wait prisma.billingSubscription.upsert({ where: { companyId }, update: { stripeSubscriptionId: object.id, stripePriceId: priceId, status, currentPeriodStart: new Date(object.current_period_start * 1000), currentPeriodEnd: new Date(object.current_period_end * 1000), cancelAtPeriodEnd: Boolean(object.cancel_at_period_end) }, create: { companyId, stripeSubscriptionId: object.id, stripePriceId: priceId, status, currentPeriodStart: new Date(object.current_period_start * 1000), currentPeriodEnd: new Date(object.current_period_end * 1000), cancelAtPeriodEnd: Boolean(object.cancel_at_period_end) } }) }</span></span>
+<span class="cstat-no" title="statement not covered" >    if (event.type === 'invoice.paid' || event.type === 'invoice.payment_failed') { const status = <span class="cstat-no" title="statement not covered" >event.type === 'invoice.paid' ? 'PAID' : 'FAILED'; <span class="cstat-no" title="statement not covered" >a</span>wait prisma.billingInvoice.upsert({ where: { stripeInvoiceId: object.id }, update: { status, amountDue: object.amount_due ?? 0, amountPaid: object.amount_paid ?? 0, paidAt: object.status_transitions?.paid_at ? new Date(object.status_transitions.paid_at * 1000) : null }, create: { companyId, stripeInvoiceId: object.id, stripeCustomerId: object.customer, status, amountDue: object.amount_due ?? 0, amountPaid: object.amount_paid ?? 0, currency: object.currency ?? 'usd', hostedInvoiceUrl: object.hosted_invoice_url, invoicePdf: object.invoice_pdf, periodStart: object.period_start ? new Date(object.period_start * 1000) : null, periodEnd: object.period_end ? new Date(object.period_end * 1000) : null, paidAt: object.status_transitions?.paid_at ? new Date(object.status_transitions.paid_at * 1000) : null } }) }</span></span>
+  }
+}
+export const stripeBillingService = new StripeBillingService()
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-01T12:09:53.306Z
+            </div>
+        <script src="../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../sorter.js"></script>
+        <script src="../../../block-navigation.js"></script>
+    </body>
+</html>
+    

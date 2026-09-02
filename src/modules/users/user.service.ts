@@ -4,6 +4,7 @@ import refreshTokenService from '../auth/refreshToken.service'
 import type { CreateUserDto, UpdateUserDto, ListUsersQueryDto } from './user.dto'
 import { billingService } from '../billing/billing.service'
 import { usageService } from '../billing/usage.service'
+import { identityService } from '../security/identity.service'
 
 export class UserService {
   async getMe(userId: string) {
@@ -21,13 +22,14 @@ export class UserService {
     })
   }
 
-  async getUsers(currentUserId: string, query: ListUsersQueryDto) {
+  async getUsers(currentUserId: string, query: ListUsersQueryDto, companyId?: string) {
     const take = Math.min(Math.max(query.limit ?? 50, 1), 100)
     const search = query.search?.trim()
 
     return prisma.user.findMany({
       where: {
         id: { not: currentUserId },
+        ...(companyId ? { companyId } : {}),
         ...(query.role ? { role: query.role } : {}),
         ...(search
           ? {
@@ -53,9 +55,9 @@ export class UserService {
     })
   }
 
-  async getUserById(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+  async getUserById(userId: string, companyId?: string) {
+    const user = await prisma.user.findFirst({
+      where: { id: userId, ...(companyId ? { companyId } : {}) },
       select: {
         id: true,
         username: true,
@@ -77,6 +79,7 @@ export class UserService {
   async createUser(payload: CreateUserDto) {
     try {
       if (payload.role === 'AGENT' && payload.companyId && !(await billingService.checkPlanLimits(payload.companyId, 'agents'))) throw new Error('Agent limit reached for this subscription')
+      if (payload.companyId) await identityService.validateCredentials(payload.companyId, payload.email, payload.password)
       const hashedPassword = await PasswordService.hash(payload.password)
 
       const user = await prisma.user.create({
@@ -110,8 +113,9 @@ export class UserService {
     }
   }
 
-  async updateUser(userId: string, payload: UpdateUserDto) {
+  async updateUser(userId: string, payload: UpdateUserDto, companyId?: string) {
     const data: Record<string, unknown> = {}
+    const current = await prisma.user.findFirst({ where: { id: userId, ...(companyId ? { companyId } : {}) }, select: { companyId: true } })
 
     if (payload.username !== undefined) data.username = payload.username
     if (payload.email !== undefined) data.email = payload.email
@@ -119,6 +123,7 @@ export class UserService {
     if (payload.companyId !== undefined) data.companyId = payload.companyId
     if (payload.isActive !== undefined) data.isActive = payload.isActive
     if (payload.password !== undefined) {
+      if (current?.companyId) await identityService.validateCredentials(current.companyId, undefined, payload.password)
       data.password = await PasswordService.hash(payload.password)
     }
 
@@ -154,10 +159,11 @@ export class UserService {
     }
   }
 
-  async deleteUser(userId: string) {
+  async deleteUser(userId: string, companyId?: string) {
     try {
       await refreshTokenService.revokeAllForUser(userId)
-      await prisma.user.delete({ where: { id: userId } })
+      const result = await prisma.user.deleteMany({ where: { id: userId, ...(companyId ? { companyId } : {}) } })
+      if (!result.count) throw new Error('Record to delete does not exist')
       return { success: true }
     } catch (err: any) {
       const message = err?.message || String(err)
@@ -168,12 +174,13 @@ export class UserService {
     }
   }
 
-  async searchAgents(currentUserId: string, query?: string, cursor?: string, limit = 20) {
+  async searchAgents(currentUserId: string, query?: string, cursor?: string, limit = 20, companyId?: string) {
     const search = query?.trim()
     const take = Math.min(Math.max(limit, 1), 50)
     const items = await prisma.user.findMany({
       where: {
         id: { not: currentUserId },
+        ...(companyId ? { companyId } : {}),
         role: 'AGENT',
         ...(search
           ? {

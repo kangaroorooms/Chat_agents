@@ -1,13 +1,21 @@
 import { Request, Response } from 'express'
 import { analyticsAPIService } from './analytics-api.service'
+import { z } from 'zod'
+
+const daysSchema = z.coerce.number().int().min(1).max(365).default(30)
+
+const companyFromContext = (req: Request, res: Response): string | null => {
+  if (!req.companyId) {
+    res.status(403).json({ success: false, message: 'Company context required' })
+    return null
+  }
+  return req.companyId
+}
 
 export const getAnalyticsOverview = async (req: Request, res: Response) => {
   try {
-    const companyId = req.params.companyId as string
-
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: 'companyId is required' })
-    }
+    const companyId = companyFromContext(req, res)
+    if (!companyId) return
 
     const overview = await analyticsAPIService.getOverview(companyId)
     return res.json({ success: true, data: overview })
@@ -22,12 +30,9 @@ export const getAnalyticsOverview = async (req: Request, res: Response) => {
 
 export const getConfidenceDistribution = async (req: Request, res: Response) => {
   try {
-    const companyId = req.params.companyId as string
-    const days = parseInt(req.query.days as string) || 30
-
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: 'companyId is required' })
-    }
+    const companyId = companyFromContext(req, res)
+    if (!companyId) return
+    const days = daysSchema.parse(req.query.days)
 
     const distribution = await analyticsAPIService.getConfidenceDistribution(companyId, days)
     return res.json({ success: true, data: distribution })
@@ -42,12 +47,9 @@ export const getConfidenceDistribution = async (req: Request, res: Response) => 
 
 export const getTrends = async (req: Request, res: Response) => {
   try {
-    const companyId = req.params.companyId as string
-    const days = parseInt(req.query.days as string) || 30
-
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: 'companyId is required' })
-    }
+    const companyId = companyFromContext(req, res)
+    if (!companyId) return
+    const days = daysSchema.parse(req.query.days)
 
     const trends = await analyticsAPIService.getTrends(companyId, days)
     return res.json({ success: true, data: trends })
@@ -62,12 +64,9 @@ export const getTrends = async (req: Request, res: Response) => {
 
 export const getEventTypeDistribution = async (req: Request, res: Response) => {
   try {
-    const companyId = req.params.companyId as string
-    const days = parseInt(req.query.days as string) || 30
-
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: 'companyId is required' })
-    }
+    const companyId = companyFromContext(req, res)
+    if (!companyId) return
+    const days = daysSchema.parse(req.query.days)
 
     const distribution = await analyticsAPIService.getEventTypeDistribution(companyId, days)
     return res.json({ success: true, data: distribution })
@@ -82,12 +81,9 @@ export const getEventTypeDistribution = async (req: Request, res: Response) => {
 
 export const getIntentDistribution = async (req: Request, res: Response) => {
   try {
-    const companyId = req.params.companyId as string
-    const days = parseInt(req.query.days as string) || 30
-
-    if (!companyId) {
-      return res.status(400).json({ success: false, message: 'companyId is required' })
-    }
+    const companyId = companyFromContext(req, res)
+    if (!companyId) return
+    const days = daysSchema.parse(req.query.days)
 
     const distribution = await analyticsAPIService.getIntentDistribution(companyId, days)
     return res.json({ success: true, data: distribution })
